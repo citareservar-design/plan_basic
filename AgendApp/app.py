@@ -1,24 +1,13 @@
 import os
 from flask import Flask, render_template, request, redirect, flash, url_for
 from datetime import datetime
-from services.appointment_service import obtener_horas_disponibles
 
-
-# Utilidades que aún se usan en el GET
-from utils.reservations import (
-    cargar_reservas, guardar_reservas, normalizar_fecha, normalizar_hora,
-    get_horas_ocupadas_por_superposicion, check_new_reservation_overlap,
-    format_google_calendar_datetime, enviar_correo_confirmacion,
-    DURACION_SERVICIOS, HORAS_DISPONIBLES
-)
-
-
-# Service de citas
-from services.appointment_service import crear_cita
+# Centralizamos todas las importaciones arriba
+from services.appointment_service import crear_cita, obtener_horas_disponibles
+from utils.reservations import cargar_reservas, guardar_reservas
 
 app = Flask(__name__)
 app.secret_key = 'clave-secreta-segura-debes-cambiarla'
-
 
 @app.route('/')
 def index():
@@ -26,17 +15,23 @@ def index():
         return render_template('inicio.html')
     return redirect(url_for('form'))
 
-
 @app.route('/form', methods=['GET', 'POST'])
 def form():
-    reservas = cargar_reservas()
     hoy = datetime.now().strftime("%Y-%m-%d")
-
-    # -------- POST (crear cita) --------
+    
+    # -------- POST (Crear cita) --------
     if request.method == 'POST':
         try:
             data = request.form.to_dict()
-            resultado = crear_cita(data)
+            
+            # 1. Obtenemos la URL base para el link de cancelación
+            # Usamos _external=True para que el link funcione desde el email (fuera de la app)
+            # Pero como necesitamos el timestamp, lo ideal es que crear_cita nos devuelva el objeto
+            # Por ahora, dejamos que crear_cita gestione la lógica interna.
+            
+            # Pasamos el blueprint/función de cancelación a crear_cita si fuera necesario, 
+            # pero para no enredarte, mantengamos tu estructura con una mejora:
+            resultado = crear_cita(data, request.host_url) 
 
             if "error" in resultado:
                 flash(f"❌ {resultado['error']}", "danger")
@@ -48,17 +43,10 @@ def form():
             flash(f"❌ Error al procesar la reserva: {str(e)}", "danger")
             return redirect(url_for('form'))
 
-    # -------- GET (mostrar formulario) --------
-    fecha_a_mostrar = request.args.get('date')
-    if not fecha_a_mostrar:
-        fecha_a_mostrar = datetime.now().strftime("%Y-%m-%d")
-    
+    # -------- GET (Mostrar formulario) --------
+    fecha_a_mostrar = request.args.get('date', hoy)
     reservas = cargar_reservas()
     horas_libres = obtener_horas_disponibles(reservas, fecha_a_mostrar)
-
-
-    
-
 
     form_data = {
         'nombre': request.args.get('nombre', ''),
@@ -77,49 +65,36 @@ def form():
         form_data=form_data
     )
 
-
-@app.route('/reserva_exitosa')
-def reserva_exitosa():
-    return render_template('reserva_exitosa.html')
-
-
 @app.route('/cancelar/<timestamp>')
 def cancelar_cita(timestamp):
     reservas = cargar_reservas()
+    total_antes = len(reservas)
     nuevas_reservas = [r for r in reservas if r.get('timestamp') != timestamp]
 
-    if len(nuevas_reservas) < len(reservas):
-        from utils import guardar_reservas
+    if len(nuevas_reservas) < total_antes:
         guardar_reservas(nuevas_reservas)
         return redirect(url_for('cancelacion_exitosa'))
 
-    flash("Cita no encontrada.", "warning")
+    flash("Cita no encontrada o ya fue cancelada.", "warning")
     return redirect(url_for('index'))
 
+# Rutas simples de éxito
+@app.route('/reserva_exitosa')
+def reserva_exitosa(): return render_template('reserva_exitosa.html')
 
 @app.route('/cancelacion_exitosa')
-def cancelacion_exitosa():
-    return render_template('cancelacion_exitosa.html')
-
+def cancelacion_exitosa(): return render_template('cancelacion_exitosa.html')
 
 @app.route('/citas', methods=['GET', 'POST'])
 def citas():
     reservas = cargar_reservas()
-    citas_cliente = None
-    email_buscado = None
+    citas_cliente, email_buscado = None, None
 
     if request.method == 'POST':
         email_buscado = request.form.get('email_cliente', '').strip().lower()
-        citas_cliente = [
-            r for r in reservas if r.get('email', '').lower() == email_buscado
-        ]
+        citas_cliente = [r for r in reservas if r.get('email', '').lower() == email_buscado]
 
-    return render_template(
-        'citas.html',
-        citas_cliente=citas_cliente,
-        email_buscado=email_buscado
-    )
-
+    return render_template('citas.html', citas_cliente=citas_cliente, email_buscado=email_buscado)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
