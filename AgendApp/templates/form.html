@@ -1,122 +1,238 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Agendamiento de Citas - AgendApp</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .bg-img {
-            background: url("{{ url_for('static', filename='img/fondo_inicio.jpg') }}") no-repeat center center/cover;
-            background-attachment: fixed;
-        }
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .bg-img {
+        background: url("{{ url_for('static', filename='img/fondo_inicio.jpg') }}")
+          no-repeat center center/cover;
+        background-attachment: fixed;
+      }
     </style>
-</head>
-<body class="bg-img min-h-screen w-full flex flex-col items-center justify-start relative py-6">
+  </head>
+  <body
+    class="bg-img min-h-screen w-full flex flex-col items-center justify-start relative py-6"
+  >
     <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"></div>
 
-    <header class="fixed top-0 left-0 w-full z-50 px-4 py-3 flex items-center justify-between bg-slate-900/30 backdrop-blur-md border-b border-white/10">
-        <h2 class="text-white text-xl font-bold tracking-tight">AgendApp</h2>
-        <div class="flex items-center gap-2">
-            <a href="{{ url_for('citas') }}" class="bg-white/10 px-3 py-2 rounded-lg text-white text-[10px] font-bold border border-white/20 uppercase">Mis Citas</a>
-            <a href="/login" class="bg-brand-500 bg-sky-500 px-3 py-2 rounded-lg text-white text-[10px] font-bold uppercase">Login</a>
-        </div>
+    <header
+      class="fixed top-0 left-0 w-full z-50 px-4 py-3 flex items-center justify-between bg-slate-900/30 backdrop-blur-md border-b border-white/10"
+    >
+      <h2 class="text-white text-xl font-bold tracking-tight">AgendApp</h2>
+      <div class="flex items-center gap-2">
+        <a
+          href="{{ url_for('citas') }}"
+          class="bg-white/10 px-3 py-2 rounded-lg text-white text-[10px] font-bold border border-white/20 uppercase"
+          >Mis Citas</a
+        >
+        <a
+          href="/login"
+          class="bg-brand-500 bg-sky-500 px-3 py-2 rounded-lg text-white text-[10px] font-bold uppercase"
+          >Login</a
+        >
+      </div>
     </header>
 
     <div class="h-20"></div>
 
-    <div class="relative z-40 w-[92%] max-w-xl mx-auto bg-white/90 backdrop-blur-xl shadow-2xl rounded-3xl p-6 md:p-10 border border-white/50">
-        <h1 class="text-slate-900 text-2xl md:text-3xl font-black text-center uppercase tracking-tighter">Reserva tu cita</h1>
-        <p class="text-slate-600 font-bold text-center mt-1 mb-6 text-sm italic">Cocoa Nails Salon</p>
+    <div
+      class="relative z-40 w-[92%] max-w-xl mx-auto bg-white/90 backdrop-blur-xl shadow-2xl rounded-3xl p-6 md:p-10 border border-white/50"
+    >
+      <h1
+        class="text-slate-900 text-2xl md:text-3xl font-black text-center uppercase tracking-tighter"
+      >
+        Reserva tu cita
+      </h1>
+      <p class="text-slate-600 font-bold text-center mt-1 mb-6 text-sm italic">
+        Cocoa Nails Salon
+      </p>
 
-        <form action="{{ url_for('form') }}" method="POST" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="text-slate-900 text-[10px] font-black uppercase mb-1 block">Fecha *</label>
-                    <div class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200">
-                        <i class="fa-regular fa-calendar-days text-sky-500"></i>
-                        <input type="date" name="date" id="date" required min="{{ hoy }}" value="{{ fecha_seleccionada }}"
-                               class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-slate-900 text-[10px] font-black uppercase mb-1 block">Hora *</label>
-                    <div class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200">
-                        <i class="fa-regular fa-clock text-sky-500"></i>
-                        <input list="listaHoras" name="hora" id="hora" required value="{{ form_data.hora_previa }}" placeholder="HH:MM"
-                               class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm">
-                        <datalist id="listaHoras">
-                            {% for h in horas_libres %}
-                            <option value="{{ h }}"></option>
-                            {% endfor %}
-                        </datalist>
-                    </div>
-                </div>
+      <form action="{{ url_for('form') }}" method="POST" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label
+              class="text-slate-900 text-[10px] font-black uppercase mb-1 block"
+              >Fecha *</label
+            >
+            <div
+              class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200"
+            >
+              <i class="fa-regular fa-calendar-days text-sky-500"></i>
+              <input
+                type="date"
+                name="date"
+                id="date"
+                required
+                min="{{ hoy }}"
+                value="{{ fecha_seleccionada }}"
+                onchange="actualizarHoras()"
+                class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm"
+              />
             </div>
-
-            <div>
-                <label class="text-slate-900 text-[10px] font-black uppercase mb-1 block">Nombre Completo *</label>
-                <div class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200">
-                    <i class="fa-regular fa-user text-sky-500"></i>
-                    <input type="text" name="nombre" value="{{ form_data.nombre }}" placeholder="Tu nombre" required
-                           class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm">
-                </div>
+          </div>
+          <div>
+            <label
+              class="text-slate-900 text-[10px] font-black uppercase mb-1 block"
+              >Hora *</label
+            >
+            <div
+              class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200"
+            >
+              <i class="fa-regular fa-clock text-sky-500"></i>
+              <input
+                list="listaHoras"
+                name="hora"
+                id="hora"
+                required
+                value="{{ form_data.hora_previa }}"
+                placeholder="HH:MM"
+                class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm"
+              />
+              <datalist id="listaHoras">
+                {% for h in horas_libres %}
+                <option value="{{ h }}"></option>
+                {% endfor %}
+              </datalist>
             </div>
+          </div>
+        </div>
 
-            <div>
-                <label class="text-slate-900 text-[10px] font-black uppercase mb-1 block">Email *</label>
-                <div class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200">
-                    <i class="fa-regular fa-envelope text-sky-500"></i>
-                    <input type="email" name="email" value="{{ form_data.email }}" placeholder="ejemplo@correo.com" required
-                           class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm">
-                </div>
-            </div>
+        <div>
+          <label
+            class="text-slate-900 text-[10px] font-black uppercase mb-1 block"
+            >Nombre Completo *</label
+          >
+          <div
+            class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200"
+          >
+            <i class="fa-regular fa-user text-sky-500"></i>
+            <input
+              type="text"
+              name="nombre"
+              value="{{ form_data.nombre }}"
+              placeholder="Tu nombre"
+              required
+              class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm"
+            />
+          </div>
+        </div>
 
-            <div>
-                <label class="text-slate-900 text-[10px] font-black uppercase mb-1 block">Teléfono *</label>
-                <div class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200">
-                    <i class="fa-solid fa-phone text-sky-500"></i>
-                    <input type="tel" name="telefono" pattern="3\d{9}" placeholder="3001234567" value="{{ form_data.telefono }}" maxlength="10" required
-                           class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm">
-                </div>
-            </div>
+        <div>
+          <label
+            class="text-slate-900 text-[10px] font-black uppercase mb-1 block"
+            >Email *</label
+          >
+          <div
+            class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200"
+          >
+            <i class="fa-regular fa-envelope text-sky-500"></i>
+            <input
+              type="email"
+              name="email"
+              value="{{ form_data.email }}"
+              placeholder="ejemplo@correo.com"
+              required
+              class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm"
+            />
+          </div>
+        </div>
 
-            <div>
-                <label class="text-slate-900 text-[10px] font-black uppercase mb-1 block">Servicio *</label>
-                <div class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200">
-                    <i class="fa-solid fa-scissors text-sky-500"></i>
-                    <input list="listaServicios" name="tipo_una" id="tipo_una" required value="{{ form_data.tipo_una }}" placeholder="Selecciona servicio"
-                           class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm">
-                    <datalist id="listaServicios">
-                        <option value="Semipermanente"></option>
-                        <option value="Soft Gel"></option>
-                        <option value="Poly Gel"></option>
-                        <option value="Base Rubber"></option>
-                        <option value="Decoración"></option>
-                    </datalist>
-                </div>
-            </div>
+        <div>
+          <label
+            class="text-slate-900 text-[10px] font-black uppercase mb-1 block"
+            >Teléfono *</label
+          >
+          <div
+            class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200"
+          >
+            <i class="fa-solid fa-phone text-sky-500"></i>
+            <input
+              type="tel"
+              name="telefono"
+              pattern="3\d{9}"
+              placeholder="3001234567"
+              value="{{ form_data.telefono }}"
+              maxlength="10"
+              required
+              class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm"
+            />
+          </div>
+        </div>
 
-            <div>
-                <label class="text-slate-900 text-[10px] font-black uppercase mb-1 block">Notas / Observaciones</label>
-                <div class="bg-white rounded-xl px-3 py-1 border-2 border-slate-200">
-                    <textarea name="notes" rows="2" placeholder="Detalles adicionales..."
-                              class="w-full p-2 bg-transparent outline-none text-slate-900 font-black resize-none text-sm">{{ form_data.notas }}</textarea>
-                </div>
-            </div>
+        <div>
+          <label
+            class="text-slate-900 text-[10px] font-black uppercase mb-1 block"
+            >Servicio *</label
+          >
+          <div
+            class="flex items-center bg-white rounded-xl px-3 border-2 border-slate-200"
+          >
+            <i class="fa-solid fa-scissors text-sky-500"></i>
+            <input
+              list="listaServicios"
+              name="tipo_una"
+              id="tipo_una"
+              required
+              value="{{ form_data.tipo_una }}"
+              placeholder="Selecciona servicio"
+              class="w-full p-2.5 bg-transparent outline-none text-slate-900 font-black text-sm"
+            />
+            <datalist id="listaServicios">
+              <option value="Semipermanente"></option>
+              <option value="Soft Gel"></option>
+              <option value="Poly Gel"></option>
+              <option value="Base Rubber"></option>
+              <option value="Decoración"></option>
+            </datalist>
+          </div>
+        </div>
 
-            <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl uppercase transition-transform active:scale-95">
-                Agendar ahora
-            </button>
-        </form>
+        <div>
+          <label
+            class="text-slate-900 text-[10px] font-black uppercase mb-1 block"
+            >Notas / Observaciones</label
+          >
+          <div class="bg-white rounded-xl px-3 py-1 border-2 border-slate-200">
+            <textarea
+              name="notes"
+              rows="2"
+              placeholder="Detalles adicionales..."
+              class="w-full p-2 bg-transparent outline-none text-slate-900 font-black resize-none text-sm"
+            >
+{{ form_data.notas }}</textarea
+            >
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-sky-500 hover:bg-sky-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl uppercase transition-transform active:scale-95"
+        >
+          Agendar ahora
+        </button>
+      </form>
     </div>
 
-    <footer class="relative z-40 py-8 text-white font-bold text-[10px] text-center">
-        <a href="https://agendapp.co">Copyright © 2026 AgendApp. All rights reserved.</a>
+    <footer
+      class="relative z-40 py-8 text-white font-bold text-[10px] text-center"
+    >
+      <a href="https://agendapp.co"
+        >Copyright © 2026 AgendApp. All rights reserved.</a
+      >
     </footer>
 
     <script src="{{ url_for('static', filename='js/citas.js') }}"></script>
-</body>
+    <script src="{{ url_for('static', filename='js/recargar_pagina_horaCita.js') }}"></script>
+
+  </body>
 </html>

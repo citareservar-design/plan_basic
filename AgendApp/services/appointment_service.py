@@ -77,8 +77,8 @@ from datetime import datetime
 
 def obtener_horas_disponibles(reservas, fecha):
     fecha = normalizar_fecha(fecha)
-
     now = datetime.now()
+    
     fecha_hoy = now.date()
     fecha_seleccionada = datetime.strptime(fecha, "%Y-%m-%d").date()
 
@@ -89,12 +89,16 @@ def obtener_horas_disponibles(reservas, fecha):
         if h in horas_reservadas:
             continue
 
-        hora_dt = datetime.strptime(f"{fecha} {h}", "%Y-%m-%d %H:%M")
+        # Convertimos la hora del JSON a un objeto datetime para comparar
+        hora_cita_dt = datetime.strptime(f"{fecha} {h}", "%Y-%m-%d %H:%M")
 
-        # 🔥 Solo filtrar horas pasadas si es HOY
-        if fecha_seleccionada == fecha_hoy and hora_dt <= now:
-            continue
-
-        horas_libres.append(h)
+        # LOGICA CLAVE:
+        # Si el día es hoy, filtramos las que ya pasaron
+        if fecha_seleccionada == fecha_hoy:
+            if hora_cita_dt > now:
+                horas_libres.append(h)
+        # Si el día es mañana o futuro, mostramos TODO el JSON (8am, 9am, etc)
+        elif fecha_seleccionada > fecha_hoy:
+            horas_libres.append(h)
 
     return horas_libres
