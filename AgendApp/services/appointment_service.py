@@ -1,91 +1,70 @@
 from datetime import datetime
 from utils.reservations import (
-    cargar_reservas, guardar_reservas, normalizar_fecha, normalizar_hora,
-    get_horas_ocupadas_por_superposicion, check_new_reservation_overlap,
-    format_google_calendar_datetime, enviar_correo_confirmacion,
-    DURACION_SERVICIOS, HORAS_DISPONIBLES
+    cargar_reservas, 
+    guardar_reservas, 
+    DURACION_SERVICIOS, 
+    format_google_calendar_datetime, 
+    enviar_correo_confirmacion,
+    HORAS_DISPONIBLES
 )
 
-
-def crear_cita(data,base_url):
-    reservas = cargar_reservas()
-
-    nombre = data.get('nombre')
-    email = data.get('email')
-    telefono = data.get('telefono')
-    tipo_una = data.get('tipo_una')
-    date = data.get('date')
-    hora = data.get('hora')
-    notas = data.get('notes', '')
-
-    if not all([nombre, email, tipo_una, date, hora]):
-        return {"error": "Campos obligatorios faltantes"}
-
-    fecha_normalizada = normalizar_fecha(date)
-    hora_normalizada = normalizar_hora(hora)
-    duration_minutes = DURACION_SERVICIOS.get(tipo_una, 60)
-
-    if check_new_reservation_overlap(
-        reservas, fecha_normalizada, hora_normalizada, duration_minutes
-    ):
-        return {"error": "Hora ocupada"}
-
-    timestamp_cita = datetime.now().isoformat()
-
-    nueva_reserva = {
-        "nombre": nombre,
-        "email": email,
-        "telefono": telefono,
-        "tipo_una": tipo_una,
-        "notas": notas,
-        "date": fecha_normalizada,
-        "hora": hora_normalizada,
-        "duracion": duration_minutes,
-        "timestamp": timestamp_cita
-    }
-
-    reservas.append(nueva_reserva)
-    guardar_reservas(reservas)
-
-    start, end = format_google_calendar_datetime(
-        fecha_normalizada, hora_normalizada, duration_minutes
-    )
-
-    calendar_link = (
-        "https://calendar.google.com/calendar/render?"
-        f"action=TEMPLATE&text=Cita%20Cocoa%20Nails&dates={start}/{end}"
-    )
-
-    cancel_link = f"{base_url}cancelar/{timestamp_cita}"
+def obtener_horas_disponibles(reservas, fecha_a_mostrar):
+    """Calcula horas libres filtrando las ocupadas y las pasadas."""
+    from utils.reservations import get_horas_ocupadas_por_superposicion
     
-    enviar_correo_confirmacion(nueva_reserva, calendar_link, cancel_link)
-
-    return {
-        "success": True,
-        "reserva": nueva_reserva,
-        "calendar_link": calendar_link
-    }
-
-
-def obtener_horas_disponibles(reservas, fecha):
-    fecha = normalizar_fecha(fecha)
-    now = datetime.now()
-    fecha_hoy = now.date()
-    fecha_seleccionada = datetime.strptime(fecha, "%Y-%m-%d").date()
-
-    horas_reservadas = get_horas_ocupadas_por_superposicion(reservas, fecha)
+    horas_ocupadas = get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar)
+    ahora = datetime.now()
     horas_libres = []
 
     for h in HORAS_DISPONIBLES:
-        if h in horas_reservadas:
+        h = h.strip()
+        if h in horas_ocupadas:
             continue
-
-        hora_cita_dt = datetime.strptime(f"{fecha} {h}", "%Y-%m-%d %H:%M")
-
-        if fecha_seleccionada == fecha_hoy:
-            if hora_cita_dt > now:
+            
+        # Evitar citas en el pasado si es hoy
+        try:
+            hora_cita_dt = datetime.strptime(f"{fecha_a_mostrar} {h}", "%Y-%m-%d %H:%M")
+            if hora_cita_dt > ahora:
                 horas_libres.append(h)
-        elif fecha_seleccionada > fecha_hoy:
-            horas_libres.append(h)
-
+        except:
+            continue
+            
     return horas_libres
+
+def crear_cita(data, host_url):
+    # 1. CARGAR LO EXISTENTE
+    reservas = cargar_reservas()
+    
+    fecha = data.get('date')
+    hora = data.get('hora')
+    servicio = data.get('tipo_una')
+    duracion = DURACION_SERVICIOS.get(servicio, 60)
+    
+    # 2. CREAR NUEVA CITA
+    timestamp = str(datetime.now().timestamp()).replace('.', '')
+    nueva_cita = {
+        'nombre': data.get('nombre'),
+        'email': data.get('email'),
+        'telefono': data.get('telefono'),
+        'date': fecha,
+        'hora': hora,
+        'tipo_una': servicio,
+        'duracion': duracion,
+        'notes': data.get('notes', ''),
+        'timestamp': timestamp
+    }
+    
+    # 3. AGREGAR A LA LISTA (Sin borrar lo anterior)
+    reservas.append(nueva_cita)
+    
+    # 4. GUARDAR TODO
+    guardar_reservas(reservas)
+    
+    # 5. ENVIAR NOTIFICACIÓN
+    start, end = format_google_calendar_datetime(fecha, hora, duracion)
+    cal_link = f"https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Nails&dates={start}/{end}"
+    can_link = f"{host_url}cancelar/{timestamp}"
+    
+    enviar_correo_confirmacion(nueva_cita, cal_link, can_link)
+    
+    return {"status": "success"}
