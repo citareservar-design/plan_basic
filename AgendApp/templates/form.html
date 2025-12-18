@@ -1,33 +1,65 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
+<head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>AgendApp | Sistema de Gestión de Citas</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <link rel="shortcut icon" href="{{ url_for('static', filename='ico/ico.ico') }}" type="image/x-icon" />
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap");
-      body {
-        font-family: "Plus Jakarta Sans", sans-serif;
-      }
-      .glass-panel {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-      }
-      .bg-tech {
-        background: radial-gradient(
-          circle at top right,
-          #0ea5e9 0%,
-          #0369a1 100%
-        );
-      }
+        @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap");
+        
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background-color: #f8fafc; /* Color de fondo más claro y limpio */
+            -webkit-tap-highlight-color: transparent; /* Quita el cuadro gris al tocar botones en celular */
+        }
+
+        /* Panel Efecto Cristal Mejorado */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        /* Fondo Tecnológico con mejor contraste */
+        .bg-tech {
+            background: radial-gradient(
+                circle at top right,
+                #0ea5e9 0%,
+                #0369a1 100%
+            );
+        }
+
+        /* Corrección para que el texto de las notas no rompa el diseño */
+        .break-custom {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
     </style>
-  </head>
+
+    <script>
+        // Configuración de Tailwind para mantener consistencia de colores
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: "#0ea5e9",
+                            600: "#0284c7",
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
   <body class="bg-slate-50 min-h-screen flex flex-col items-center">
     <nav
       class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-md border-b border-slate-200"
@@ -71,7 +103,7 @@
           Reserva tu Espacio
         </h1>
         <p class="text-slate-500 font-medium">
-          Gestionado de forma inteligente por
+          Reserva tu espacio fácil e inteligente con 
           <span class="text-slate-900 font-bold">AgendApp</span>
         </p>
 
@@ -79,7 +111,7 @@
           class="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400"
         >
           <i class="fa-solid fa-shop"></i>
-          <span>Sede: Cocoa Nails Salon</span>
+          <span>Sede: Editar empresa Salon</span>
           <!-- nombre de la empresa -->
         </div>
       </div>

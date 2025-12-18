@@ -11,24 +11,19 @@ appointment_bp = Blueprint('appointment', __name__)
 
 @appointment_bp.route('/')
 def index():
-    # En lugar de render_template('inicio.html'), redirigimos al form
     return redirect(url_for('appointment.form'))
 
 @appointment_bp.route('/form', methods=['GET', 'POST'])
 def form():
     hoy = datetime.now().strftime("%Y-%m-%d")
     
-    # -------- POST (Crear cita) --------
     if request.method == 'POST':
         try:
             data = request.form.to_dict()
-            
-            # Pasamos request.host_url para construir el link de cancelación en el correo
             resultado = crear_cita(data, request.host_url) 
 
             if "error" in resultado:
                 flash(f"❌ {resultado['error']}", "danger")
-                # Al usar Blueprints, url_for necesita el nombre del blueprint: 'appointment.form'
                 return redirect(url_for('appointment.form'))
 
             return redirect(url_for('appointment.reserva_exitosa'))
@@ -37,7 +32,6 @@ def form():
             flash(f"❌ Error al procesar la reserva: {str(e)}", "danger")
             return redirect(url_for('appointment.form'))
 
-    # -------- GET (Mostrar formulario) --------
     fecha_a_mostrar = request.args.get('date', hoy)
     reservas = cargar_reservas()
     horas_libres = obtener_horas_disponibles(reservas, fecha_a_mostrar)
@@ -59,18 +53,27 @@ def form():
         form_data=form_data
     )
 
-@appointment_bp.route('/cancelar/<timestamp>')
+@appointment_bp.route('/cancelar/<timestamp>', methods=['GET', 'POST']) # Agregamos methods
 def cancelar_cita(timestamp):
     reservas = cargar_reservas()
-    total_antes = len(reservas)
-    nuevas_reservas = [r for r in reservas if r.get('timestamp') != timestamp]
-
-    if len(nuevas_reservas) < total_antes:
+    reserva_a_borrar = next((r for r in reservas if r.get('timestamp') == timestamp), None)
+    
+    if reserva_a_borrar:
+        email_cliente = reserva_a_borrar.get('email')
+        nuevas_reservas = [r for r in reservas if r.get('timestamp') != timestamp]
         guardar_reservas(nuevas_reservas)
-        return redirect(url_for('appointment.cancelacion_exitosa'))
+        
+        referer = request.referrer
+        
+        # Si venías del panel de admin, te refresca ahí mismo
+        if referer and '/admin/agenda' in referer:
+            return redirect(url_for('admin.agenda'))
+        
+        # Si venías de la vista de cliente
+        return redirect(url_for('appointment.citas', email_cliente=email_cliente))
 
-    flash("Cita no encontrada o ya fue cancelada.", "warning")
     return redirect(url_for('appointment.index'))
+
 
 @appointment_bp.route('/reserva_exitosa')
 def reserva_exitosa(): 
@@ -82,13 +85,13 @@ def cancelacion_exitosa():
 
 @appointment_bp.route('/citas', methods=['GET', 'POST'])
 def citas():
-    reservas = cargar_reservas()
-    citas_cliente, email_buscado = None, None
-
-    if request.method == 'POST':
-        email_buscado = request.form.get('email_cliente', '').strip().lower()
-        citas_cliente = [r for r in reservas if r.get('email', '').lower() == email_buscado]
-
+    email_buscado = request.form.get('email_cliente') or request.args.get('email_cliente')
+    
+    citas_cliente = []
+    if email_buscado:
+        reservas = cargar_reservas()
+        citas_cliente = [r for r in reservas if r.get('email') == email_buscado]
+    
     return render_template('citas.html', 
-                           citas_cliente=citas_cliente, 
-                           email_buscado=email_buscado)
+                            citas_cliente=citas_cliente, 
+                            email_buscado=email_buscado)

@@ -2,86 +2,131 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda del Día - Cocoa Nails</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AgendApp | Administrador De citas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <link rel="shortcut icon" href="{{ url_for('static', filename='ico/ico.ico') }}" type="image/x-icon" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .card-shadow { shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: #020617;
+            background-image: radial-gradient(circle at 50% -20%, #1e293b, #020617);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* Tarjeta Neon High-Clarity */
+        .neon-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 2px solid #22d3ee;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+            border-radius: 2.5rem;
+        }
+
+        /* Solución para notas largas */
+        .break-words {
+            word-break: break-word; /* Rompe palabras largas */
+            overflow-wrap: break-word;
+            display: block;
+            line-height: 1.5;
+        }
+
+        /* Scrollbar estética para notas muy largas */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #22d3ee;
+            border-radius: 10px;
+        }
     </style>
 </head>
-<body class="bg-[#f8fafc] min-h-screen pb-24">
+<body class="pb-32 text-slate-200">
 
-    <div class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-2xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-extrabold text-slate-900 tracking-tight uppercase">Agenda Hoy</h1>
-                <p class="text-xs font-bold text-sky-500 uppercase tracking-widest">{{ hoy }}</p>
-            </div>
-            <div class="bg-slate-900 text-white px-3 py-1.5 rounded-xl text-xs font-black">
-                {{ citas|length }} CITAS
-            </div>
+    <header class="max-w-5xl mx-auto px-6 pt-10 pb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="text-center md:text-left">
+            <h1 class="text-3xl font-black text-white tracking-tighter uppercase">Panel de Control</h1>
+            <p class="text-sky-400 font-bold tracking-widest mt-1 text-sm uppercase italic">{{ hoy }}</p>
         </div>
-    </div>
+        <div class="bg-sky-900/40 border border-sky-500/50 px-6 py-2 rounded-full text-sky-300 text-xs font-black uppercase tracking-widest">
+            {{ citas|length }} Registros Activos
+        </div>
+    </header>
 
-    <div class="max-w-2xl mx-auto p-6 space-y-4">
-        {% for cita in citas %}
-        <div class="bg-white rounded-3xl p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 flex items-center gap-4 transition-all active:scale-[0.98]">
-            
-            <div class="bg-slate-50 px-4 py-3 rounded-2xl text-center min-w-[85px]">
-                <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-tight">Hora</span>
-                <span class="text-lg font-black text-slate-900">{{ cita.hora }}</span>
-            </div>
+    <div class="h-[1px] w-full bg-gradient-to-r from-transparent via-slate-700 to-transparent mb-10"></div>
 
-            <div class="flex-1 min-w-0">
-                <h3 class="text-lg font-bold text-slate-900 truncate leading-tight">{{ cita.nombre }}</h3>
-                <div class="flex flex-wrap items-center gap-2 mt-1">
-                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-sky-50 text-sky-600 uppercase border border-sky-100">
-                        {{ cita.tipo_una }}
-                    </span>
-                    <span class="text-[11px] text-slate-400 font-medium">
-                         <i class="fa-solid fa-phone text-[9px]"></i> {{ cita.telefono }}
-                    </span>
-                </div>
+    <main class="max-w-6xl mx-auto px-4 md:px-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {% for cita in citas %}
+            <div class="neon-card p-6 md:p-8 transition-all hover:scale-[1.01]">
                 
+                <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                    
+                    <div class="bg-slate-900 text-white px-6 py-4 rounded-[2rem] text-center min-w-[110px] shadow-xl">
+                        <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Hora</span>
+                        <span class="text-2xl font-black italic tracking-tighter">{{ cita.hora }}</span>
+                    </div>
+
+                    <div class="flex-1 text-center sm:text-left min-w-0">
+                        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tighter mb-2 truncate">
+                            {{ cita.nombre }}
+                        </h2>
+                        <div class="flex flex-wrap justify-center sm:justify-start items-center gap-3">
+                            <span class="bg-sky-600 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter">
+                                {{ cita.tipo_una }}
+                            </span>
+                            <span class="text-slate-500 font-bold text-sm">
+                                <i class="fa-solid fa-phone mr-1 text-sky-500"></i> {{ cita.telefono }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex sm:flex-col gap-3">
+                        <a href="https://wa.me/57{{ cita.telefono }}" target="_blank" 
+                           class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 border border-emerald-200 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-md active:scale-90">
+                            <i class="fa-brands fa-whatsapp text-2xl"></i>
+                        </a>
+                        
+                        <form action="{{ url_for('appointment.cancelar_cita', timestamp=cita.timestamp) }}" method="POST" onsubmit="return confirm('¿Eliminar esta cita definitivamente?')">
+                            <button type="submit" class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 border border-rose-200 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-md active:scale-90">
+                                <i class="fa-solid fa-trash-can text-xl"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
                 {% if cita.notes %}
-                <div class="mt-2 p-2 bg-slate-50 rounded-lg border-l-2 border-slate-200">
-                    <p class="text-[11px] text-slate-500 italic">"{{ cita.notes }}"</p>
+                <div class="mt-6 p-5 bg-slate-50/80 rounded-[1.5rem] border border-slate-200 overflow-hidden">
+                    <p class="text-slate-600 text-xs font-medium leading-relaxed italic break-words max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                        "{{ cita.notes }}"
+                    </p>
                 </div>
                 {% endif %}
             </div>
-
-            <div class="flex items-center">
-                <a href="https://wa.me/57{{ cita.telefono }}" target="_blank" 
-                   class="bg-[#25D366] text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-green-100 hover:scale-105 transition-transform active:scale-90">
-                    <i class="fa-brands fa-whatsapp text-2xl"></i>
-                </a>
+            {% else %}
+            <div class="lg:col-span-2 text-center py-24 bg-white/5 rounded-[3rem] border-2 border-dashed border-white/10">
+                <i class="fa-solid fa-calendar-day text-slate-700 text-5xl mb-4"></i>
+                <p class="text-slate-500 font-black uppercase tracking-[0.3em] text-xs">Agenda Despejada</p>
             </div>
+            {% endfor %}
         </div>
-        {% else %}
-        <div class="text-center py-24">
-            <div class="bg-slate-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-slate-200">
-                <i class="fa-solid fa-calendar-day text-slate-300 text-3xl"></i>
-            </div>
-            <h2 class="text-slate-900 font-extrabold text-xl">Sin citas por ahora</h2>
-            <p class="text-slate-400 text-sm mt-1 font-medium italic">Es un buen momento para un café ☕</p>
-        </div>
-        {% endfor %}
-    </div>
+    </main>
 
-    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-xl px-8 py-4 rounded-[2rem] shadow-2xl border border-white/10 flex items-center gap-8 z-50">
-        <a href="{{ url_for('appointment.form') }}" class="text-white/50 hover:text-sky-400 transition-colors flex flex-col items-center">
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-2xl px-10 py-5 rounded-full border border-white/10 shadow-2xl flex items-center gap-12 z-50">
+        <a href="{{ url_for('appointment.form') }}" class="text-slate-500 hover:text-white transition-all flex flex-col items-center group">
             <i class="fa-solid fa-house text-xl"></i>
-            <span class="text-[8px] font-bold uppercase mt-1">Inicio</span>
+            <span class="text-[8px] font-black uppercase mt-1">Inicio</span>
         </a>
-        <div class="w-[1px] h-6 bg-white/10"></div>
+        <div class="w-[1px] h-8 bg-white/10"></div>
         <a href="{{ url_for('admin.agenda') }}" class="text-sky-400 flex flex-col items-center">
-            <i class="fa-solid fa-calendar-list text-xl"></i>
-            <span class="text-[8px] font-bold uppercase mt-1">Agenda</span>
+            <i class="fa-solid fa-calendar-check text-xl"></i>
+            <span class="text-[8px] font-black uppercase mt-1">Agenda</span>
         </a>
-    </div>
+    </nav>
 
 </body>
 </html>

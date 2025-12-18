@@ -1,84 +1,60 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cita Cancelada | Cocoa Nails</title>
-    <!-- Incluir Tailwind CSS para estilos modernos y responsivos -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Cita Cancelada | AgendApp</title>
+    
+    <link rel="shortcut icon" href="{{ url_for('static', filename='ico/ico.ico') }}" type="image/x-icon" />
+
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
     <style>
-        /* Configuración personalizada de Tailwind para un color de marca */
-        :root {
-            --color-primary: #e91e63; /* Rosa fuerte (como en el correo) */
-        }
-        .text-primary { color: var(--color-primary); }
-        .bg-primary { background-color: var(--color-primary); }
-        .border-primary { border-color: var(--color-primary); }
-        .hover\:bg-primary-dark:hover { background-color: #c2185b; /* Un poco más oscuro */ }
-        
+        @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap");
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* Fondo muy claro */
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background-color: #f8fafc;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex flex-col items-center">
 
-    <div class="w-full max-w-md bg-white shadow-2xl rounded-xl overflow-hidden p-6 sm:p-8 transform transition duration-500 hover:scale-[1.01]">
-        
-        <!-- Mensajes Flash de Flask (mostrar el estado de la cancelación) -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    {% if category == 'success' %}
-                        <div class="p-4 mb-6 text-sm text-green-800 rounded-lg bg-green-50" role="alert">
-                            <span class="font-bold">¡Éxito!</span> {{ message }}
-                        </div>
-                    {% elif category == 'warning' %}
-                        <div class="p-4 mb-6 text-sm text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                            <span class="font-bold">Atención:</span> {{ message }}
-                        </div>
-                    {% else %}
-                         <div class="p-4 mb-6 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span class="font-bold">Error:</span> {{ message }}
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 mb-6 rounded-full bg-red-100">
-                 <!-- Icono de Cancelación (SVG de círculo con X) -->
-                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <main class="flex-1 flex items-center justify-center p-6 mt-16 w-full max-w-md">
+        <div class="bg-white p-10 rounded-[3rem] text-center shadow-[0_20px_50px_rgba(0,0,0,0.05)] border-2 border-rose-100 w-full">
+            
+            <div class="relative inline-block mb-8">
+                <div class="absolute inset-0 bg-rose-400 rounded-full blur-2xl opacity-10"></div>
+                <div class="bg-rose-50 w-24 h-24 rounded-full flex items-center justify-center border-2 border-rose-100 relative text-rose-500">
+                    <i class="fa-solid fa-calendar-xmark text-4xl"></i>
+                </div>
             </div>
             
-            <h1 class="text-3xl font-extrabold text-gray-900 mb-3">Cita Cancelada</h1>
-            <p class="text-gray-600 mb-8">
-                Lamentamos que no puedas asistir. El horario ha sido liberado para otro cliente.
-            </p>
-        </div>
-
-        <div class="space-y-4">
-            <p class="text-sm text-gray-500 text-center">
-                Si deseas agendar una nueva cita o tienes preguntas, no dudes en contactarnos.
-            </p>
-            <a href="{{ url_for('form') }}" 
-               class="w-full flex justify-center items-center px-4 py-3 border border-transparent 
-                      text-base font-medium rounded-lg shadow-sm text-white bg-primary 
-                      hover:bg-primary-dark transition duration-150 ease-in-out">
-                📅 Volver a Agendar
-            </a>
+            <h1 class="text-3xl font-black tracking-tighter mb-4 text-slate-900 uppercase">
+                Cita Cancelada
+            </h1>
             
-            <a href="https://wa.me/3135895811?text=Hola%20Cancele%20la%20cita" 
-               class="w-full flex justify-center items-center px-4 py-3 border border-gray-300 
-                      text-base font-medium rounded-lg shadow-sm text-gray-700 bg-white 
-                      hover:bg-gray-50 transition duration-150 ease-in-out">
-                📞 Contactar al Salón
-            </a>
+            <p class="text-slate-500 font-medium leading-relaxed mb-10">
+                Tu reserva ha sido eliminada correctamente.
+            </p>
+            
+            <div class="space-y-4">
+                <a class="block w-full bg-slate-900 text-white font-black py-4 px-8 rounded-2xl hover:bg-[#0ea5e9] transition-all duration-300 transform active:scale-95 shadow-lg uppercase text-xs tracking-widest text-center" 
+                   href="{{ url_for('appointment.form') }}">
+                    Volver a Agendar
+                </a>
+                
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] pt-4">
+                    <a href="https://agendapp.co">AgendApp</a>  ● 2025
+                </p>
+            </div>
         </div>
-
-    </div>
+    </main>
 
 </body>
 </html>

@@ -102,9 +102,9 @@ def enviar_correo_confirmacion(reserva, calendar_link, cancel_link):
     
     try:
         msg = MIMEMultipart("alternative")
-        msg['From'] = f"Cocoa Nails <{EMAIL_FROM}>"
+        msg['From'] = f"Editar empresa <{EMAIL_FROM}>"
         msg['To'] = destinatario
-        msg['Subject'] = '✨ ¡Tu Cita ha sido Confirmada! - Cocoa Nails' #nombre de la empresa
+        msg['Subject'] = '✨ ¡Tu Cita ha sido Confirmada! - Editar empresa' #nombre de la empresa
 
         duracion_legible = f"{duration_minutes // 60}h {duration_minutes % 60}m"
         
@@ -145,7 +145,7 @@ def enviar_correo_confirmacion(reserva, calendar_link, cancel_link):
                     
                     <p style="font-size: 12px; color: #888; margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; text-align: center;">
                         Si cancelas la cita, el horario se liberará automáticamente.<br>
-                        ¡Gracias por agendar con <b>Cocoa Nails</b>!
+                        ¡Gracias por agendar con <b>Editar Empresa</b>!
                     </p>
                 </div>
             </body>
