@@ -88,9 +88,9 @@ def get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar):
 
 def enviar_correo_confirmacion(reserva, calendar_link, cancel_link):
     config = cargar_config()
-    empresa = config.get('empresa', '{{config.empresa}}')
+    empresa = config.get('empresa', 'Mi Negocio')
     destinatario = reserva.get('email')
-    destinatario_admin = config.get('email_admin', 'diego251644@gmail.com')
+    destinatario_admin = config.get('email_admin')
     
     try:
         msg = MIMEMultipart("alternative")
@@ -103,10 +103,26 @@ def enviar_correo_confirmacion(reserva, calendar_link, cancel_link):
             <div style="background:white; border-radius:15px; max-width:500px; margin:auto; border:1px solid #e2e8f0; overflow:hidden;">
                 <div style="background:#0ea5e9; padding:20px; text-align:center; color:white;"><h2>Cita Confirmada</h2></div>
                 <div style="padding:20px;">
-                    <p>Hola <b>{reserva.get('nombre')}</b>, tu cita para <b>{reserva.get('tipo_una')}</b> en <b>{empresa}</b> el día <b>{reserva.get('date')}</b> a las <b>{reserva.get('hora')}</b> está lista.</p>
+                    <p>
+                        Hola <b>{reserva.get('nombre')}</b>,<br><br>
+                        Tu cita para <b>{reserva.get('tipo_una')}</b> en <b>{empresa}</b> ha sido confirmada.<br>
+                        📅 <b>Día:</b> {reserva.get('date')}<br>
+                        ⏰ <b>Hora:</b> {reserva.get('hora')}<br><br>
+                    </p>
+
+                    <div style="text-align:center; margin:25px 0;">
+                        <a href="{calendar_link}" style="background:#4285F4; color:white; padding:12px 25px; text-decoration:none; border-radius:10px; font-weight:bold; display:inline-block;">
+                           📅 Agregar a Google Calendar
+                        </a>
+                    </div>
+
+                    <p style="font-size:12px; color:#64748b; text-align:center;">
+                        Si necesitas realizar algún cambio, comunícate con nosotros.
+                    </p>
                 </div>
             </div>
         </div>"""
+        
         msg.attach(MIMEText(html_body, 'html'))
         server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT); server.starttls()
         server.login(EMAIL_FROM, EMAIL_PASSWORD); server.send_message(msg); server.quit()
@@ -117,7 +133,7 @@ def enviar_correo_reagendacion(reserva, calendar_link):
     config = cargar_config()
     empresa = config.get('empresa', '{{config.empresa}}')
     destinatario = reserva.get('email')
-    destinatario_admin = config.get('email_admin', 'diego251644@gmail.com')
+    destinatario_admin = config.get('email_admin')
     
     try:
         msg = MIMEMultipart("alternative")
@@ -131,6 +147,11 @@ def enviar_correo_reagendacion(reserva, calendar_link):
                 <div style="padding:20px;">
                      <p>Hola <b>{reserva.get('nombre')}</b>,</p>
                     <p>Tu cita en <b>{empresa}</b> fue reprogramada con éxito. Te esperamos el <b>{reserva.get('date')}</b> a las <b>{reserva.get('hora')}</b>.</p>
+                        <div style="text-align:center; margin:25px 0;">
+                        <a href="{calendar_link}" style="background:#4285F4; color:white; padding:12px 25px; text-decoration:none; border-radius:10px; font-weight:bold; display:inline-block;">
+                           📅 Agregar a Google Calendar
+                        </a>
+                    </div>
                     <p style="margin-top:20px; font-size:12px; color:#94a3b8;">Si no solicitaste este cambio, por favor comunícate con nosotros.</p>
                 </div>
             </div>
@@ -145,7 +166,7 @@ def enviar_correo_cancelacion(reserva):
     config = cargar_config()
     empresa = config.get('empresa', '{{config.empresa}}')
     destinatario = reserva.get('email')
-    destinatario_admin = config.get('email_admin', 'diego251644@gmail.com')
+    destinatario_admin = config.get('email_admin')
     
     try:
         msg = MIMEMultipart("alternative")
