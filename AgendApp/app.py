@@ -10,5 +10,13 @@ app.secret_key = 'clave-secreta-segura-debes-cambiarla'
 app.register_blueprint(appointment_bp)
 app.register_blueprint(admin_bp, url_prefix='/admin')
 
+
+@app.context_processor
+def inject_config():
+    from utils.reservations import cargar_config
+    return dict(config=cargar_config())
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+    
+    

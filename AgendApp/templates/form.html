@@ -128,11 +128,11 @@
           <div
             class="flex items-center gap-2 text-[11px] font-medium text-slate-600 uppercase tracking-wider"
           >
-            <i class="fa-solid fa-shop text-sky-600"></i>
-            <span
-              >Sede:
-              <span class="text-slate-900">Editar empresa Salon</span></span
-            >
+<i class="fa-solid fa-shop text-sky-600"></i>
+<span>Sede:
+    <span class="text-slate-900">{{ config.empresa}}</span>
+</span>
+            
           </div>
 
           <div
@@ -258,7 +258,7 @@
                 >Notas o Requerimientos</label
               >
               <textarea
-                name="notas"
+                name="notes"
                 rows="3"
                 placeholder="¿Alguna observación especial para tu cita?"
                 class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold resize-none"
