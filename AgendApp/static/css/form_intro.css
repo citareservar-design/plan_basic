@@ -36,3 +36,44 @@
             transition: opacity 0.5s ease;
         }
         .show-content { opacity: 1 !important; }
+
+        
+
+        /* Elimina el estilo feo por defecto del select en algunos sistemas */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+/* Mejora el aspecto de las opciones cuando el select se abre */
+select option {
+    padding: 12px;
+    background-color: white;
+    color: #0f172a; /* Slate 900 */
+}
+
+/* En navegadores modernos (Chrome/Edge), esto suaviza los bordes del menú desplegable */
+select:focus {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+
+
+
+
+/* Asegura que el logo no se encime y mantenga su proporción */
+.flex-shrink-0 {
+    flex-shrink: 0; /* Esto evita que el texto aplaste la imagen */
+}
+
+/* Estilo para que la imagen sea nítida */
+img {
+    image-rendering: -webkit-optimize-contrast;
+    display: block;
+}
+
+/* Ajuste opcional para el hover del logo completo */
+.group:hover span.text-slate-900 {
+    color: #0ea5e9; /* Sky-500 al pasar el mouse */
+}

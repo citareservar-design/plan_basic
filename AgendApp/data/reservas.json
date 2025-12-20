@@ -3,22 +3,11 @@
         "nombre": "diego peña",
         "email": "instalaciones@yeminus.com",
         "telefono": "3185861444",
-        "date": "2025-12-18",
-        "hora": "08:00",
-        "tipo_una": "Soft Gel",
-        "duracion": 120,
-        "notes": "pruebaaaaa",
-        "timestamp": "1766033341871415"
-    },
-    {
-        "nombre": "diego peña",
-        "email": "instalaciones@yeminus.com",
-        "telefono": "3185861444",
         "date": "2025-12-19",
         "hora": "08:00",
         "tipo_una": "Semipermanente",
         "duracion": 60,
         "notes": "",
-        "timestamp": "1766195458762692"
+        "timestamp": "1766199500840216"
     }
 ]
