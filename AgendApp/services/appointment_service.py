@@ -29,19 +29,37 @@ def obtener_horas_libres_reagendar(fecha):
 
 def crear_cita(data, host_url):
     reservas = cargar_reservas()
-    fecha, hora, servicio = data.get('date'), data.get('hora'), data.get('tipo_una')
+    
+    # Extraer variables necesarias del diccionario 'data'
+    fecha = data.get('date')
+    hora = data.get('hora')
+    servicio = data.get('tipo_una')
     duracion = DURACION_SERVICIOS.get(servicio, 60)
     timestamp = str(datetime.now().timestamp()).replace('.', '')
+
     nueva_cita = {
-        'nombre': data.get('nombre'), 'email': data.get('email'), 'telefono': data.get('telefono'),
-        'date': fecha, 'hora': hora, 'tipo_una': servicio, 'duracion': duracion,
-        'notes': data.get('notes', ''), 'timestamp': timestamp
+        'nombre': data.get('nombre'), 
+        'email': data.get('email'), 
+        'telefono': data.get('telefono'),
+        'date': fecha, 
+        'hora': hora, 
+        'tipo_una': servicio, 
+        'duracion': duracion,
+        'notes': data.get('notes', ''), 
+        'timestamp': timestamp
     }
+    
     reservas.append(nueva_cita)
     guardar_reservas(reservas)
+    
+    # Generar links
     start, end = format_google_calendar_datetime(fecha, hora, duracion)
     cal_link = f"https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Nails&dates={start}/{end}"
-    enviar_correo_confirmacion(nueva_cita, cal_link, "")
+    citas_link = f"{host_url}citas?email_cliente={nueva_cita['email']}"
+    
+    # Enviar correo (Asegúrate que reservations.py acepte 3 argumentos)
+    enviar_correo_confirmacion(nueva_cita, cal_link, citas_link)
+    
     return {"status": "success"}
 
 def cancelar_cita_por_id(id_cita):
@@ -66,11 +84,15 @@ def reagendar_cita_por_id(id_cita, nueva_fecha, nueva_hora):
     for cita in reservas:
         if cita.get('timestamp') == id_cita:
             cita['date'], cita['hora'] = nueva_fecha, nueva_hora
-            cita_modificada = cita; break
+            cita_modificada = cita
+            break
+
     if cita_modificada:
         guardar_reservas(reservas)
         start, end = format_google_calendar_datetime(nueva_fecha, nueva_hora, cita_modificada.get('duracion', 60))
         nuevo_cal_link = f"https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Reagendada&dates={start}/{end}"
-        enviar_correo_reagendacion(cita_modificada, nuevo_cal_link)
-        return {"status": "success", "message": "Cita reagendada y notificada"}
-    return {"status": "error", "message": "Error al reagendar"}
+        
+        # LLAMADA REVERTIDA: Solo pasamos reserva y el link de calendario
+        enviar_correo_reagendacion(cita_modificada, nuevo_cal_link) 
+        
+        return {"status": "success", "message": "Cita reagendada"}

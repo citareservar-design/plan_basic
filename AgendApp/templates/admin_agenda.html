@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AgendApp | Administrador De citas</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-        <link rel="shortcut icon" href="{{ url_for('static', filename='ico/ico.ico') }}" type="image/x-icon" />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/admin_agenda.css') }}"
-    />
+    <link rel="shortcut icon" href="{{ url_for('static', filename='ico/ico.ico') }}" type="image/x-icon" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_agenda.css') }}" />
 </head>
-<body class="pb-32 text-slate-200">
+<body class="pb-32 text-slate-200 bg-slate-950">
 
     <header class="max-w-5xl mx-auto px-6 pt-10 pb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="text-center md:text-left">
@@ -29,7 +27,7 @@
     <main class="max-w-6xl mx-auto px-4 md:px-6">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {% for cita in citas %}
-            <div class="neon-card p-6 md:p-8 transition-all hover:scale-[1.01]">
+            <div class="neon-card p-6 md:p-8 transition-all hover:scale-[1.01] bg-white rounded-[2.5rem] shadow-2xl overflow-hidden">
                 
                 <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                     
@@ -57,6 +55,11 @@
                            class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 border border-emerald-200 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-md active:scale-90">
                             <i class="fa-brands fa-whatsapp text-2xl"></i>
                         </a>
+
+                        <button onclick="reagendarAdmin('{{ cita.timestamp }}', '{{ cita.nombre }}')" 
+                                class="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 border border-orange-200 flex items-center justify-center hover:bg-orange-600 hover:text-white transition-all shadow-md active:scale-90">
+                            <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+                        </button>
                         
                         <form action="{{ url_for('appointment.cancelar_cita', timestamp=cita.timestamp) }}" method="POST" onsubmit="return confirm('¿Eliminar esta cita definitivamente?')">
                             <button type="submit" class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 border border-rose-200 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-md active:scale-90">
@@ -67,8 +70,8 @@
                 </div>
 
                 {% if cita.notes %}
-                <div class="mt-6 p-5 bg-slate-50/80 rounded-[1.5rem] border border-slate-200 overflow-hidden">
-                    <p class="text-slate-600 text-xs font-medium leading-relaxed italic break-words max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                <div class="mt-6 p-5 bg-slate-50/80 rounded-[1.5rem] border border-slate-200">
+                    <p class="text-slate-600 text-xs font-medium italic break-words">
                         "{{ cita.notes }}"
                     </p>
                 </div>
@@ -84,7 +87,7 @@
     </main>
 
     <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-2xl px-10 py-5 rounded-full border border-white/10 shadow-2xl flex items-center gap-12 z-50">
-        <a href="{{ url_for('appointment.form') }}" class="text-slate-500 hover:text-white transition-all flex flex-col items-center group">
+        <a href="{{ url_for('appointment.form') }}" class="text-slate-500 hover:text-white transition-all flex flex-col items-center">
             <i class="fa-solid fa-house text-xl"></i>
             <span class="text-[8px] font-black uppercase mt-1">Inicio</span>
         </a>
@@ -95,5 +98,54 @@
         </a>
     </nav>
 
+    <script>
+    async function reagendarAdmin(id, nombre) {
+        // 1. Pedir Fecha
+        const { value: fecha } = await Swal.fire({
+            title: `Reagendar a ${nombre}`,
+            html: `<input type="date" id="swal-date" class="swal2-input" min="{{ hoy }}">`,
+            confirmButtonText: 'Ver horas',
+            focusConfirm: false,
+            preConfirm: () => document.getElementById('swal-date').value
+        });
+
+        if (!fecha) return;
+
+        // 2. Cargar horas desde tu API
+        const resp = await fetch(`/api/horas-disponibles/${fecha}`);
+        const horas = await resp.json();
+
+        if (horas.length === 0) {
+            Swal.fire('Sin cupos', 'No hay horas libres para ese día', 'error');
+            return;
+        }
+
+        // 3. Pedir Hora
+        const { value: hora } = await Swal.fire({
+            title: 'Selecciona Nueva Hora',
+            input: 'select',
+            inputOptions: horas.reduce((acc, h) => { acc[h] = h; return acc; }, {}),
+            confirmButtonText: 'Confirmar Cambio',
+            showCancelButton: true
+        });
+
+        if (!hora) return;
+
+        // 4. Enviar a la API
+        const resultado = await fetch(`/api/reagendar/${id}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ date: fecha, hora: hora })
+        });
+
+        const data = await resultado.json();
+        if (data.status === 'success') {
+            Swal.fire('¡Listo!', 'Cita actualizada y cliente notificado.', 'success')
+            .then(() => location.reload());
+        } else {
+            Swal.fire('Error', data.message, 'error');
+        }
+    }
+    </script>
 </body>
 </html>

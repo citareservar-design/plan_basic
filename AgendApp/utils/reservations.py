@@ -86,7 +86,7 @@ def get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar):
 
 # --- CORREOS ---
 
-def enviar_correo_confirmacion(reserva, calendar_link, cancel_link):
+def enviar_correo_confirmacion(reserva, calendar_link, citas_link):
     config = cargar_config()
     empresa = config.get('empresa', 'Mi Negocio')
     destinatario = reserva.get('email')
@@ -97,7 +97,7 @@ def enviar_correo_confirmacion(reserva, calendar_link, cancel_link):
         msg['From'] = f"{empresa} <{EMAIL_FROM}>"
         msg['To'] = destinatario
         msg['cc'] = destinatario_admin
-        msg['Subject'] = f'✨ ¡Cita Confirmada! - {empresa}'
+        msg['Subject'] = f'📌 ¡Cita Confirmada! - {empresa}'
         
         html_body = f"""<div style="font-family:sans-serif; padding:20px; background:#f1f5f9;">
             <div style="background:white; border-radius:15px; max-width:500px; margin:auto; border:1px solid #e2e8f0; overflow:hidden;">
@@ -114,6 +114,9 @@ def enviar_correo_confirmacion(reserva, calendar_link, cancel_link):
                         <a href="{calendar_link}" style="background:#4285F4; color:white; padding:12px 25px; text-decoration:none; border-radius:10px; font-weight:bold; display:inline-block;">
                            📅 Agregar a Google Calendar
                         </a>
+                         <a href="{citas_link}" style="background:#4285F4; color:white; padding:12px 25px; text-decoration:none; border-radius:10px; font-weight:bold; display:inline-block;">
+                           📋 Ver Mis Citas
+                        </a>
                     </div>
 
                     <p style="font-size:12px; color:#64748b; text-align:center;">
@@ -129,7 +132,7 @@ def enviar_correo_confirmacion(reserva, calendar_link, cancel_link):
         return True
     except: return False
 
-def enviar_correo_reagendacion(reserva, calendar_link):
+def enviar_correo_reagendacion(reserva, calendar_link,citas_link=None):
     config = cargar_config()
     empresa = config.get('empresa', '{{config.empresa}}')
     destinatario = reserva.get('email')
@@ -140,7 +143,7 @@ def enviar_correo_reagendacion(reserva, calendar_link):
         msg['From'] = f"{empresa} <{EMAIL_FROM}>"
         msg['To'] = destinatario
         msg['cc'] = destinatario_admin
-        msg['Subject'] = f'🔄 Cita Reagendada - {empresa}'
+        msg['Subject'] = f'🕜 Cita Reagendada - {empresa}'
         html_body = f"""<div style="font-family:sans-serif; padding:20px; background:#fff7ed;">
             <div style="background:white; border-radius:15px; max-width:500px; margin:auto; border:1px solid #fed7aa; overflow:hidden;">
                 <div style="background:#f59e0b; padding:20px; text-align:center; color:white;"><h2>Cita Reagendada</h2></div>
