@@ -1,1 +1,13 @@
-[]
+[
+    {
+        "nombre": "diego peña",
+        "email": "instalaciones@yeminus.com",
+        "telefono": "3185861444",
+        "date": "2025-12-19",
+        "hora": "08:00",
+        "tipo_una": "Semipermanente",
+        "duracion": 60,
+        "notes": "",
+        "timestamp": "1766199500840216"
+    }
+]
