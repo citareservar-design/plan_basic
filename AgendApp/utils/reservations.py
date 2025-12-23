@@ -30,6 +30,16 @@ EMAIL_PASSWORD = 'dren psgm ncqx lrpy'
 
 # --- Funciones de Configuración y I/O ---
 
+
+def formatear_hora_12h(hora_24):
+    """Convierte '14:00' a '02:00 PM'"""
+    try:
+        dt = datetime.strptime(hora_24, "%H:%M")
+        return dt.strftime("%I:%M %p")
+    except:
+        return hora_24
+    
+
 def cargar_config():
     """Carga la configuración de la empresa desde el JSON."""
     try:

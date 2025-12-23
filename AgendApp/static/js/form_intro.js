@@ -36,3 +36,22 @@
                 counter.innerText = progress + '%';
             }, 150);
         }
+
+function validarYEnviar(input) {
+    if (!input.value) return;
+
+    // Crear la fecha (añadimos la hora para evitar desfases de zona horaria)
+    const fechaSeleccionada = new Date(input.value + 'T00:00:00');
+    const diaSemana = fechaSeleccionada.getDay(); // 0 es Domingo
+
+    if (diaSemana === 0) {
+        // Es Domingo: Bloqueamos
+        alert("Lo sentimos, los domingos no abrimos. Por favor selecciona otro día.");
+        input.value = ""; // Limpiamos el selector
+    } else {
+        // Es un día válido: Ejecutamos tu lógica original
+        marcarCambiandoFecha();
+        input.form.method = 'get';
+        input.form.submit();
+    }
+}

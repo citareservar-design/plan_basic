@@ -7,7 +7,8 @@ from utils.reservations import (
     enviar_correo_confirmacion,
     enviar_correo_reagendacion,
     enviar_correo_cancelacion, # Nueva importación
-    HORAS_DISPONIBLES
+    HORAS_DISPONIBLES,
+    formatear_hora_12h
 )
 
 def obtener_horas_disponibles(reservas, fecha_a_mostrar):
@@ -15,14 +16,20 @@ def obtener_horas_disponibles(reservas, fecha_a_mostrar):
     horas_ocupadas = get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar)
     ahora = datetime.now()
     horas_libres = []
+    
     for h in HORAS_DISPONIBLES:
         h = h.strip()
         if h in horas_ocupadas: continue
         try:
             if datetime.strptime(f"{fecha_a_mostrar} {h}", "%Y-%m-%d %H:%M") > ahora:
-                horas_libres.append(h)
+                # ENVIAMOS UN DICCIONARIO: valor para el back y texto para el cliente
+                horas_libres.append({
+                    'valor': h, 
+                    'texto': formatear_hora_12h(h)
+                })
         except: continue
     return horas_libres
+
 
 def obtener_horas_libres_reagendar(fecha):
     return obtener_horas_disponibles(cargar_reservas(), fecha)

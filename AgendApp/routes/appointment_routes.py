@@ -15,6 +15,17 @@ from utils.reservations import cargar_reservas, guardar_reservas
 # Definimos el Blueprint
 appointment_bp = Blueprint('appointment', __name__)
 
+# --- FUNCIÓN DE UTILIDAD PARA VALIDAR DOMINGOS ---
+def es_domingo(fecha_str):
+    """Retorna True si la fecha (YYYY-MM-DD) es domingo (6 en Python)."""
+    try:
+        if not fecha_str:
+            return False
+        fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%d')
+        return fecha_obj.weekday() == 6
+    except ValueError:
+        return False
+
 @appointment_bp.route('/')
 def index():
     return redirect(url_for('appointment.form'))
@@ -26,21 +37,33 @@ def form():
     if request.method == 'POST':
         try:
             data = request.form.to_dict()
+            
+            # VALIDACIÓN: Bloqueo de domingos al crear cita
+            if es_domingo(data.get('date')):
+                flash("Lo sentimos, los domingos no estamos disponibles para citas.", "danger")
+                return redirect(url_for('appointment.form'))
+
             resultado = crear_cita(data, request.host_url) 
 
             if "error" in resultado:
-                flash(f"❌ {resultado['error']}", "danger")
+                flash(f"{resultado['error']}", "danger")
                 return redirect(url_for('appointment.form'))
 
             return redirect(url_for('appointment.reserva_exitosa'))
 
         except Exception as e:
-            flash(f"❌ Error al procesar la reserva: {str(e)}", "danger")
+            flash(f"Error al procesar la reserva: {str(e)}", "danger")
             return redirect(url_for('appointment.form'))
 
     fecha_a_mostrar = request.args.get('date', hoy)
-    reservas = cargar_reservas()
-    horas_libres = obtener_horas_disponibles(reservas, fecha_a_mostrar)
+    
+    # VALIDACIÓN: Si el usuario selecciona domingo en el selector de fecha
+    if es_domingo(fecha_a_mostrar):
+        flash("📅 Has seleccionado un domingo. Por favor, elige otro día de la semana.", "warning")
+        horas_libres = [] # No mostramos horas si es domingo
+    else:
+        reservas = cargar_reservas()
+        horas_libres = obtener_horas_disponibles(reservas, fecha_a_mostrar)
 
     form_data = {
         'nombre': request.args.get('nombre', ''),
@@ -78,20 +101,26 @@ def citas():
 def reserva_exitosa(): 
     return render_template('reserva_exitosa.html')
 
-# --- NUEVAS RUTAS API PARA FUNCIONES MÓVILES (REAGENDAR/CANCELAR) ---
+# --- NUEVAS RUTAS API PARA FUNCIONES MÓVILES ---
 
 @appointment_bp.route('/api/horas-disponibles/<fecha>')
 def api_horas_disponibles(fecha):
-    """Ruta que usa el modal de SweetAlert2 para cargar horas libres."""
+    # VALIDACIÓN: Bloqueo de domingos en la API de horas
+    if es_domingo(fecha):
+        return jsonify([]) # Retorna lista vacía si es domingo
+        
     horas = obtener_horas_libres_reagendar(fecha)
     return jsonify(horas)
 
 @appointment_bp.route('/api/reagendar/<timestamp>', methods=['POST'])
 def api_reagendar(timestamp):
-    """Procesa el cambio de fecha y hora desde el botón reagendar."""
     data = request.get_json()
     nueva_fecha = data.get('date')
     nueva_hora = data.get('hora')
+    
+    # VALIDACIÓN: Bloqueo de domingos al reagendar
+    if es_domingo(nueva_fecha):
+        return jsonify({"status": "error", "message": "No se puede reagendar para un domingo."}), 400
     
     if not nueva_fecha or not nueva_hora:
         return jsonify({"status": "error", "message": "Datos incompletos"}), 400
@@ -101,11 +130,9 @@ def api_reagendar(timestamp):
 
 @appointment_bp.route('/api/cancelar/<timestamp>', methods=['POST'])
 def api_cancelar(timestamp):
-    """Cancela la cita vía petición AJAX (fetch)."""
     resultado = cancelar_cita_por_id(timestamp)
     return jsonify(resultado)
 
-# Mantenemos la ruta vieja por compatibilidad con correos antiguos si es necesario
 @appointment_bp.route('/cancelar/<timestamp>', methods=['GET', 'POST'])
 def cancelar_cita(timestamp):
     reservas = cargar_reservas()
@@ -113,11 +140,9 @@ def cancelar_cita(timestamp):
     
     if reserva_a_borrar:
         cancelar_cita_por_id(timestamp)
-        # REVISAR REFERER: Si la petición viene de 'admin', regresa a admin
-        if 'admin' in request.referrer:
+        if request.referrer and 'admin' in request.referrer:
             return redirect(url_for('admin.agenda'))
         
-        # De lo contrario, va a la vista de cliente
         return redirect(url_for('appointment.citas', email_cliente=reserva_a_borrar.get('email')))
 
     return redirect(url_for('appointment.index'))

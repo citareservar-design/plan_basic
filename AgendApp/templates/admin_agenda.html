@@ -99,53 +99,65 @@
     </nav>
 
     <script>
-    async function reagendarAdmin(id, nombre) {
-        // 1. Pedir Fecha
-        const { value: fecha } = await Swal.fire({
-            title: `Reagendar a ${nombre}`,
-            html: `<input type="date" id="swal-date" class="swal2-input" min="{{ hoy }}">`,
-            confirmButtonText: 'Ver horas',
-            focusConfirm: false,
-            preConfirm: () => document.getElementById('swal-date').value
-        });
-
-        if (!fecha) return;
-
-        // 2. Cargar horas desde tu API
-        const resp = await fetch(`/api/horas-disponibles/${fecha}`);
-        const horas = await resp.json();
-
-        if (horas.length === 0) {
-            Swal.fire('Sin cupos', 'No hay horas libres para ese día', 'error');
-            return;
+async function reagendarAdmin(id, nombre) {
+    // 1. Pedir Fecha
+    const { value: fecha } = await Swal.fire({
+        title: `Reagendar a ${nombre}`,
+        html: `<input type="date" id="swal-date" class="swal2-input" min="{{ hoy }}">`,
+        confirmButtonText: 'Ver horas',
+        focusConfirm: false,
+        preConfirm: () => {
+            const f = document.getElementById('swal-date').value;
+            if (!f) return Swal.showValidationMessage('Selecciona una fecha');
+            // Bloqueo de domingo para el admin también
+            if (new Date(f + 'T00:00:00').getDay() === 0) return Swal.showValidationMessage('Domingos no hay servicio');
+            return f;
         }
+    });
 
-        // 3. Pedir Hora
-        const { value: hora } = await Swal.fire({
-            title: 'Selecciona Nueva Hora',
-            input: 'select',
-            inputOptions: horas.reduce((acc, h) => { acc[h] = h; return acc; }, {}),
-            confirmButtonText: 'Confirmar Cambio',
-            showCancelButton: true
-        });
+    if (!fecha) return;
 
-        if (!hora) return;
+    // 2. Cargar horas (Esto llama a tu API que ya filtra ocupados)
+    const resp = await fetch(`/api/horas-disponibles/${fecha}`);
+    const horas = await resp.json();
 
-        // 4. Enviar a la API
-        const resultado = await fetch(`/api/reagendar/${id}`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ date: fecha, hora: hora })
-        });
-
-        const data = await resultado.json();
-        if (data.status === 'success') {
-            Swal.fire('¡Listo!', 'Cita actualizada y cliente notificado.', 'success')
-            .then(() => location.reload());
-        } else {
-            Swal.fire('Error', data.message, 'error');
-        }
+    if (!horas || horas.length === 0) {
+        Swal.fire('Sin cupos', 'No hay horas libres (ocupado o domingo)', 'error');
+        return;
     }
+
+    // 3. Convertir lista de objetos a formato que entiende el Select de SweetAlert
+    const opcionesParaSelect = {};
+    horas.forEach(h => {
+        opcionesParaSelect[h.valor] = h.texto; // Muestra 02:00 PM, pero guarda 14:00
+    });
+
+    // 4. Pedir Hora
+    const { value: hora } = await Swal.fire({
+        title: 'Selecciona Nueva Hora',
+        input: 'select',
+        inputOptions: opcionesParaSelect,
+        inputPlaceholder: 'Seleccione una hora',
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar Cambio'
+    });
+
+    if (!hora) return;
+
+    // 5. Enviar el cambio
+    const resultado = await fetch(`/api/reagendar/${id}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ date: fecha, hora: hora })
+    });
+
+    const data = await resultado.json();
+    if (data.status === 'success') {
+        Swal.fire('¡Listo!', 'Cita actualizada.', 'success').then(() => location.reload());
+    } else {
+        Swal.fire('Error', data.message, 'error');
+    }
+}
     </script>
 </body>
 </html>
