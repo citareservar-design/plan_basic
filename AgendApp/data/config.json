@@ -1,6 +1,7 @@
 {
-    "empresa": "Yesica Murilloooooooo",
-    "email_admin": "marthaluciaq0216@gmail.com",
+    "admin_password": "123456Aa",
+    "empresa": "Uñas perfectas",
+    "email_admin": "diego251644@gmail.com",
     "whatsapp": "573001234567",
     "smtp": {
         "server": "smtp.gmail.com",
@@ -9,17 +10,13 @@
         "password": "dren psgm ncqx lrpy"
     },
     "horarios_base": [
-        "08:00", "09:00", "10:00", "11:00", "12:00", 
-        "14:00", "15:00", "16:00", "17:00"
+        "08:00",
+        "09:00",
+        "10:00",
+        "11:00"
     ],
-
     "servicios": {
-        "Semipermanente": 60,
-        "Soft Gel": 120,
-        "Poly Gel": 120,
-        "Base Rubber": 60,
-        "Decoración": 60,
-        "Retiro de Uñas": 180,
-        "Retiro de Uñassss": 120
+        "peinado": 120,
+        "limpieza": 180
     }
 }

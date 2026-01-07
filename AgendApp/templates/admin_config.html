@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Configuración - AgendApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 min-h-screen pb-20">
+    <nav class="bg-white border-b border-slate-200 px-6 py-4 mb-8 flex justify-between items-center sticky top-0 z-50">
+        <h1 class="text-xl font-bold text-slate-800">⚙️ Configuración</h1>
+        <a href="{{ url_for('admin.logout') }}" class="text-red-500 font-medium text-sm flex items-center gap-1">
+            <i class="fa-solid fa-right-from-bracket"></i> Salir
+        </a>
+    </nav>
+
+    <main class="max-w-2xl mx-auto px-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="mb-6 p-4 rounded-2xl bg-green-100 text-green-700 border border-green-200 font-bold text-center">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="space-y-6">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-700">
+                    <i class="fa-solid fa-shop text-sky-500"></i> Información General
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 ml-2">NOMBRE DE LA EMPRESA</label>
+                        <input type="text" name="empresa" value="{{ config.empresa }}" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sky-500 transition-all font-bold">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 ml-2">WHATSAPP (CON CÓDIGO DE PAÍS)</label>
+                        <input type="text" name="whatsapp" value="{{ config.whatsapp }}" placeholder="Ej: 573001234567" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sky-500 transition-all font-bold">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 ml-2">EMAIL DEL ADMINISTRADOR (PARA COPIAS)</label>
+                        <input type="email" name="email_admin" value="{{ config.email_admin }}" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sky-500 transition-all font-bold">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-700">
+                    <i class="fa-solid fa-hand-sparkles text-pink-400"></i> Servicios y Duración
+                </h2>
+                <div id="contenedor-servicios" class="space-y-3">
+                    {% for nombre, duracion in config.servicios.items() %}
+                    <div class="flex gap-2 items-center">
+                        <input type="text" name="srv_nombre[]" value="{{ nombre }}" placeholder="Servicio" class="flex-1 p-3 bg-slate-50 border rounded-xl text-sm font-bold">
+                        <input type="number" name="srv_duracion[]" value="{{ duracion }}" placeholder="Min" class="w-20 p-3 bg-slate-50 border rounded-xl text-sm font-bold text-center">
+                        <button type="button" onclick="this.parentElement.remove()" class="text-red-400 p-2 hover:bg-red-50 rounded-lg transition-colors">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" onclick="agregarServicio()" class="mt-4 w-full py-3 border-2 border-dashed border-sky-200 text-sky-500 rounded-2xl font-bold hover:bg-sky-50 transition-all">
+                    + Añadir Nuevo Servicio
+                </button>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-700">
+                    <i class="fa-solid fa-envelope text-orange-400"></i> Configuración de Correo
+                </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <input type="text" name="smtp_server" value="{{ config.get('smtp', {}).get('server', '') }}" placeholder="Servidor SMTP" class="...">
+    <input type="number" name="smtp_port" value="{{ config.get('smtp', {}).get('port', 587) }}" placeholder="Puerto" class="...">
+    <input type="email" name="smtp_email" value="{{ config.get('smtp', {}).get('email', '') }}" placeholder="Correo" class="...">
+    <input type="password" name="smtp_password" value="{{ config.get('smtp', {}).get('password', '') }}" placeholder="Contraseña" class="...">
+</div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h2 class="text-lg font-bold mb-2 flex items-center gap-2 text-slate-700">
+                    <i class="fa-solid fa-clock text-emerald-400"></i> Horarios Base
+                </h2>
+                <p class="text-[10px] text-slate-400 mb-3 px-2">SEPARA LAS HORAS CON COMAS (EJ: 08:00, 10:30, 14:00)</p>
+                <textarea name="horarios" rows="3" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sky-500 transition-all font-bold text-slate-600">{{ config.horarios_base | join(', ') }}</textarea>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-700">
+                    <i class="fa-solid fa-lock text-slate-400"></i> Clave del Panel
+                </h2>
+                <input type="password" name="admin_password" placeholder="Escribe una nueva clave solo si quieres cambiarla" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sky-500 transition-all font-bold">
+            </div>
+
+            <button type="submit" class="w-full bg-sky-500 text-white py-5 rounded-3xl font-bold shadow-xl shadow-sky-100 hover:bg-sky-600 active:scale-[0.98] transition-all text-lg">
+                🚀 Guardar Toda la Configuración
+            </button>
+        </form>
+    </main>
+
+    <script>
+        function agregarServicio() {
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-center';
+            div.innerHTML = `
+                <input type="text" name="srv_nombre[]" placeholder="Nuevo Servicio" class="flex-1 p-3 bg-slate-50 border rounded-xl text-sm font-bold">
+                <input type="number" name="srv_duracion[]" placeholder="Min" class="w-20 p-3 bg-slate-50 border rounded-xl text-sm font-bold text-center">
+                <button type="button" onclick="this.parentElement.remove()" class="text-red-400 p-2 hover:bg-red-50 rounded-lg transition-colors">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+            document.getElementById('contenedor-servicios').appendChild(div);
+        }
+    </script>
+</body>
+</html>
