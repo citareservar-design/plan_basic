@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 import os
 
 # Importamos los Blueprints (asegúrate que los archivos estén en la carpeta 'routes')
@@ -26,6 +26,12 @@ def inject_config():
     except Exception as e:
         print(f"Error al inyectar config: {e}")
         return dict(config={})
+    
+    
+@app.route('/reserva_exitosa')
+def reserva_exitosa():
+    # Esta ruta servirá para mostrar que todo salió bien
+    return render_template('reserva_exitosa.html')
 
 if __name__ == '__main__':
     # host='0.0.0.0' permite el acceso desde tu móvil a la IP 192.168.1.65

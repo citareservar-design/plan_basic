@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from datetime import datetime
+from datetime import datetime,timedelta
 from utils.reservations import cargar_config, cargar_reservas
 from services.appointment_service import obtener_horas_disponibles
 
@@ -159,26 +159,64 @@ def citas():
 
 @appointment_bp.route('/api/horas-disponibles/<fecha>')
 def api_horas_disponibles(fecha):
-    # 1. Obtenemos el nombre del servicio que viene del móvil
-    servicio_nombre = request.args.get('servicio', '').lower()
+    # 1. Capturar el servicio y limpiar espacios
+    servicio_nombre = request.args.get('servicio', '').strip().lower()
     
-    # 2. Cargamos el config para buscar cuánto dura ESE servicio
     config = cargar_config()
     servicios = config.get('servicios', {})
+    horarios_base = config.get('horarios_base', [])
+    hora_cierre_str = config.get('hora_cierre', '21:00')
     
-    # 3. Buscamos la duración. Si el cliente agregó uno nuevo, aquí lo encontrará
-    # Si no lo encuentra, usa 60 min por seguridad
-    duracion = servicios.get(servicio_nombre, 60)
+    # 2. Obtener duración (Si no lo encuentra, asume 60)
+    duracion_min = servicios.get(servicio_nombre, 60)
     
-    # DEBUG: Esto saldrá en tu consola negra, revisa que diga el número correcto
-    print(f"DEBUG: El servicio '{servicio_nombre}' dura {duracion} minutos.")
+    # Convertir cierre a objeto tiempo para comparar
+    formato = "%H:%M"
+    hora_cierre_dt = datetime.strptime(hora_cierre_str, formato)
     
     reservas = cargar_reservas()
+    ocupadas = [r['hora'] for r in reservas if r['date'] == fecha]
     
-    # 4. Le pasamos la duración real a la lógica
-    horas = obtener_horas_disponibles(reservas, fecha, duracion_servicio=duracion)
+    horas_validas = []
+
+    for hora_inicio in horarios_base:
+        # Convertir hora de inicio actual
+        inicio_dt = datetime.strptime(hora_inicio, formato)
+        # Calcular hora de fin
+        fin_dt = inicio_dt + timedelta(minutes=duracion_min)
+
+        # REGLA 1: ¿Se pasa de la hora de cierre?
+        if fin_dt > hora_cierre_dt:
+            continue # Salta esta hora, no sirve
+
+        # REGLA 2: ¿Choca con el almuerzo o citas existentes?
+        es_posible = True
+        pasos_de_una_hora = duracion_min // 60
+        
+        for i in range(pasos_de_una_hora):
+            bloque_dt = inicio_dt + timedelta(hours=i)
+            bloque_str = bloque_dt.strftime(formato)
+            
+            # Verificar si este bloque está ocupado o es hora de almuerzo
+            if bloque_str in ocupadas:
+                es_posible = False
+                break
+            
+            # Verificar almuerzo (12:00 a 13:00)
+            if config['almuerzo']['inicio'] <= bloque_str < config['almuerzo']['fin']:
+                es_posible = False
+                break
+
+        if es_posible:
+            horas_validas.append({
+                "valor": hora_inicio,
+                "texto": inicio_dt.strftime("%I:%M %p")
+            })
+
+    # DEBUG para que veas en la consola negra qué pasó
+    print(f"SERVICIO: {servicio_nombre} | DURACIÓN: {duracion_min}min | TOTAL HORAS: {len(horas_validas)}")
     
-    return jsonify(horas)
+    return jsonify(horas_validas)
 
 @appointment_bp.route('/api/reagendar/<timestamp>', methods=['POST'])
 def api_reagendar(timestamp):

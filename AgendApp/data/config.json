@@ -1,12 +1,12 @@
 {
     "admin_password": "123456Aa",
-    "empresa": "Mi Negocio",
+    "empresa": "yesica murillo",
     "email_admin": "minegocio@gmail.com",
     "whatsapp": "573001234567",
-    "hora_cierre": "20:00",
+    "hora_cierre": "17:00",
     "almuerzo": {
         "inicio": "12:00",
-        "fin": "13:00"
+        "fin": "14:00"
     },
     "smtp": {
         "server": "smtp.gmail.com",
@@ -23,11 +23,7 @@
         "13:00",
         "14:00",
         "15:00",
-        "16:00",
-        "17:00",
-        "18:00",
-        "19:00",
-        "20:00"
+        "16:00"
     ],
     "servicios": {
         "peinado 2horas": 120,
