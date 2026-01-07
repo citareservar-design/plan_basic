@@ -1,1 +1,24 @@
-[]
+[
+    {
+        "nombre": "armando perez",
+        "email": "instalaciones@yeminus.com",
+        "telefono": "3185861444",
+        "date": "2026-01-08",
+        "hora": "08:00",
+        "tipo_una": "Semipermanente",
+        "duracion": 120,
+        "notes": "prueba js",
+        "timestamp": "1767753066869299"
+    },
+    {
+        "nombre": "pepito",
+        "email": "instalaciones@yeminus.com",
+        "telefono": "3185861444",
+        "date": "2026-01-08",
+        "hora": "10:00",
+        "tipo_una": "Poly Gel",
+        "duracion": 120,
+        "notes": "ggg",
+        "timestamp": "1767753785145369"
+    }
+]
