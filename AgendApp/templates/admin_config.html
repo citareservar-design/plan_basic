@@ -86,6 +86,21 @@
                 <p class="text-[10px] text-slate-400 mb-3 px-2">SEPARA LAS HORAS CON COMAS (EJ: 08:00, 10:30, 14:00)</p>
                 <textarea name="horarios" rows="3" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sky-500 transition-all font-bold text-slate-600">{{ config.horarios_base | join(', ') }}</textarea>
             </div>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+    <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-700">
+        <i class="fa-solid fa-utensils text-orange-400"></i> Horario de Almuerzo
+    </h2>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="text-xs font-bold text-slate-400">INICIO ALMUERZO</label>
+            <input type="time" name="almuerzo_inicio" value="{{ config.almuerzo.inicio }}" class="w-full p-3 bg-slate-50 border rounded-xl font-bold">
+        </div>
+        <div>
+            <label class="text-xs font-bold text-slate-400">FIN ALMUERZO</label>
+            <input type="time" name="almuerzo_fin" value="{{ config.almuerzo.fin }}" class="w-full p-3 bg-slate-50 border rounded-xl font-bold">
+        </div>
+    </div>
+</div>
 
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
                 <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-700">

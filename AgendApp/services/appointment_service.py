@@ -12,24 +12,34 @@ from utils.reservations import (
 )
 
 def obtener_horas_disponibles(reservas, fecha_a_mostrar):
-    # 1. Cargamos la configuración del JSON en este momento
     from utils.reservations import get_horas_ocupadas_por_superposicion, cargar_config
+    from datetime import datetime
     
     config = cargar_config()
-    # 2. Obtenemos la lista de horas del JSON (y usamos la vieja de respaldo si falla)
     horas_desde_json = config.get("horarios_base", [])
+    # Obtenemos el almuerzo del JSON
+    almuerzo = config.get('almuerzo', {"inicio": "12:00", "fin": "13:00"})
     
     horas_ocupadas = get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar)
     ahora = datetime.now()
     horas_libres = []
     
-    # 3. CAMBIO CLAVE: Iteramos sobre la lista que viene del JSON
     for h in horas_desde_json:
         h = h.strip()
-        if h in horas_ocupadas: continue
+        
+        # 1. Saltamos si la hora ya está ocupada por una reserva
+        if h in horas_ocupadas: 
+            continue
+            
+        # 2. NUEVO: Filtro de Almuerzo
+        # Comparamos si la hora actual 'h' está dentro del rango de almuerzo
+        if almuerzo['inicio'] <= h < almuerzo['fin']:
+            continue
+            
         try:
-            # Validación de fecha y hora para no mostrar horas pasadas
-            if datetime.strptime(f"{fecha_a_mostrar} {h}", "%Y-%m-%d %H:%M") > ahora:
+            # 3. Validación para no mostrar horas que ya pasaron hoy
+            fecha_hora_slot = datetime.strptime(f"{fecha_a_mostrar} {h}", "%Y-%m-%d %H:%M")
+            if fecha_hora_slot > ahora:
                 horas_libres.append({
                     'valor': h, 
                     'texto': formatear_hora_12h(h)

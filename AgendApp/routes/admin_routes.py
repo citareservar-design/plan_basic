@@ -51,12 +51,16 @@ def edit_config():
                 if n.strip():
                     nuevos_servicios[n.strip()] = int(d) if d else 60
 
-            # Construimos la estructura completa
+            # Construimos la estructura completa incluyendo ALMUERZO
             nueva_config = {
                 "admin_password": request.form.get('admin_password') or config.get('admin_password'),
                 "empresa": request.form.get('empresa'),
                 "email_admin": request.form.get('email_admin'),
                 "whatsapp": request.form.get('whatsapp'),
+                "almuerzo": {
+                    "inicio": request.form.get('almuerzo_inicio', '12:00'),
+                    "fin": request.form.get('almuerzo_fin', '13:00')
+                },
                 "smtp": {
                     "server": request.form.get('smtp_server'),
                     "port": int(request.form.get('smtp_port', 587)),
@@ -67,11 +71,12 @@ def edit_config():
                 "servicios": nuevos_servicios
             }
             
-            # Guardamos físicamente en el archivo
+            # Guardado Seguro: Primero generamos el texto, luego abrimos el archivo
+            contenido_json = json.dumps(nueva_config, indent=4, ensure_ascii=False)
             with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
-                json.dump(nueva_config, f, indent=4, ensure_ascii=False)
+                f.write(contenido_json)
             
-            flash("¡Configuración y servicios actualizados!", "success")
+            flash("¡Configuración y almuerzo actualizados!", "success")
             return redirect(url_for('admin.edit_config'))
             
         except Exception as e:

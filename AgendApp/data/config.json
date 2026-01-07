@@ -3,6 +3,10 @@
     "empresa": "Uñas perfectas",
     "email_admin": "diego251644@gmail.com",
     "whatsapp": "573001234567",
+    "almuerzo": {
+        "inicio": "12:00",
+        "fin": "14:00"
+    },
     "smtp": {
         "server": "smtp.gmail.com",
         "port": 587,
@@ -13,7 +17,13 @@
         "08:00",
         "09:00",
         "10:00",
-        "11:00"
+        "11:00",
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00"
     ],
     "servicios": {
         "peinado": 120,
