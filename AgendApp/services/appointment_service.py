@@ -75,7 +75,7 @@ def cancelar_cita_por_id(id_cita):
     cita_a_cancelar = next((r for r in reservas if r.get('timestamp') == id_cita), None)
     
     if cita_a_cancelar:
-        # 1. Enviar correo antes de borrarla de la lista
+        # 1. Enviar correo antes de borrarla de la list
         enviar_correo_cancelacion(cita_a_cancelar)
         
         # 2. Filtrar la lista para eliminarla
