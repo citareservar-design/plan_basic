@@ -88,10 +88,14 @@
                 <h3 class="text-slate-900 dark:text-white font-black text-lg tracking-tight">{{ cita.date }}</h3>
                 <p class="text-slate-500 dark:text-slate-400 font-bold text-sm">{{ cita.hora }}</p>
               </div>
-              <div class="flex gap-2">
-                <button onclick="prepararReagendar('{{ cita.timestamp }}')" class="flex-1 py-2 bg-brand-500 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Reagendar</button>
-                <button onclick="confirmarCancelacion('{{ cita.timestamp }}')" class="flex-1 py-2 border border-red-200 text-red-500 text-[10px] font-black rounded-lg uppercase tracking-widest">Cancelar</button>
-              </div>
+<div class="flex gap-2">
+    <button onclick="prepararReagendar('{{ cita.timestamp }}')" class="flex-1 py-2 bg-brand-500 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">
+        Reagendar
+    </button>
+    <button onclick="confirmarCancelacion('{{ cita.timestamp }}')" class="flex-1 py-2 border border-red-200 text-red-500 text-[10px] font-black rounded-lg uppercase tracking-widest">
+        Cancelar
+    </button>
+</div>
             </div>
             {% endfor %}
           </div>
@@ -134,5 +138,37 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/citas.js') }}"></script>
+
+<div id="loader-agendapp" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 2147483647; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif;">
+    
+    <div style="position: relative; width: 80px; height: 80px; display: flex; justify-content: center; align-items: center;">
+        <div class="agendapp-spinner"></div>
+        <div style="position: absolute; font-size: 32px; font-weight: 900; color: #0ea5e9; font-family: 'Inter', sans-serif;">A</div>
+    </div>
+
+    <div style="margin-top: 25px; text-align: center;">
+        <h2 style="color: #0f172a; margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 1px;">AGENDAPP</h2>
+        <p id="loader-msg" style="color: #64748b; font-size: 14px; margin-top: 5px;">Procesando...</p>
+    </div>
+
+    <div style="width: 180px; height: 4px; background: #f1f5f9; border-radius: 10px; margin-top: 20px; overflow: hidden;">
+        <div id="progress-bar" style="width: 0%; height: 100%; background: #0ea5e9; transition: width 0.4s ease;"></div>
+    </div>
+</div>
+
+<style>
+.agendapp-spinner {
+    width: 70px; /* Un poco más grande para que la A respire */
+    height: 70px;
+    border: 4px solid #f1f5f9;
+    border-top: 4px solid #0ea5e9;
+    border-radius: 50%;
+    animation: spinAgendApp 1s linear infinite;
+}
+
+@keyframes spinAgendApp { 
+    to { transform: rotate(360deg); } 
+}
+</style>
   </body>
 </html>

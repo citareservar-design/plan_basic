@@ -1,9 +1,9 @@
 {
     "admin_password": "123456Aa",
-    "empresa": "Uñas perfectas",
-    "email_admin": "diego251644@gmail.com",
+    "empresa": "Mi Negocio",
+    "email_admin": "minegocio@gmail.com",
     "whatsapp": "573001234567",
-    "hora_cierre": "19:00",
+    "hora_cierre": "20:00",
     "almuerzo": {
         "inicio": "12:00",
         "fin": "13:00"
@@ -25,8 +25,8 @@
         "15:00",
         "16:00",
         "17:00",
-        "18:00"
-
+        "18:00",
+        "19:00"
     ],
     "servicios": {
         "peinado 2horas": 120,

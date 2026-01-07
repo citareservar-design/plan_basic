@@ -1,3 +1,6 @@
+console.log("Citas.js cargado");
+
+
 // 1. CANCELAR CITA
 const confirmarCancelacion = (timestamp) => {
   Swal.fire({
@@ -10,18 +13,54 @@ const confirmarCancelacion = (timestamp) => {
     cancelButtonText: 'No, volver'
   }).then((result) => {
     if (result.isConfirmed) {
+      // --- DISPARAR LOADER DE AGENDAPP ---
+      const loader = document.getElementById('loader-agendapp');
+      const progressBar = document.getElementById('progress-bar');
+      const loaderMsg = document.getElementById('loader-msg');
+
+      if (loader) loader.style.display = 'flex';
+      if (progressBar) progressBar.style.width = "50%";
+      if (loaderMsg) loaderMsg.innerText = "Cancelando tu cupo...";
+
       fetch(`/api/cancelar/${timestamp}`, { method: 'POST' })
         .then(res => res.json())
         .then(data => {
-          Swal.fire('Eliminada', data.message, 'success').then(() => location.reload());
+          if (data.status === 'success' || data.message.includes("éxito")) {
+            // Éxito: Barra al 100%
+            if (progressBar) progressBar.style.width = "100%";
+            if (loaderMsg) loaderMsg.innerText = "Cita eliminada correctamente.";
+            
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          } else {
+            // Si hay error, ocultamos loader y mostramos el error
+            if (loader) loader.style.display = 'none';
+            Swal.fire('Error', data.message || 'No se pudo cancelar', 'error');
+          }
+        })
+        .catch(err => {
+          if (loader) loader.style.display = 'none';
+          Swal.fire('Error', 'Error de conexión con el servidor', 'error');
         });
     }
   });
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
 // 2. REAGENDAR CITA
 const prepararReagendar = (timestamp) => {
-  // Obtenemos la fecha de hoy en formato YYYY-MM-DD para el atributo min
   const hoy = new Date().toISOString().split('T')[0];
   
   Swal.fire({
@@ -48,7 +87,6 @@ const prepararReagendar = (timestamp) => {
       const hourSelect = document.getElementById('new_hour');
       
       const cargarHoras = (fecha) => {
-        // Validar si es domingo antes de hacer el fetch (Opcional, pero recomendado para mobile)
         const fechaObj = new Date(fecha + 'T00:00:00');
         if (fechaObj.getDay() === 0) {
             hourSelect.innerHTML = '<option value="">Domingos Cerrado</option>';
@@ -60,7 +98,6 @@ const prepararReagendar = (timestamp) => {
           .then(res => res.json())
           .then(horas => {
             if (horas && horas.length > 0) {
-              // MAPEAMOS EL OBJETO: h.valor para el sistema, h.texto para el cliente (12h)
               hourSelect.innerHTML = horas.map(h => 
                 `<option value="${h.valor}">${h.texto}</option>`
               ).join('');
@@ -69,13 +106,12 @@ const prepararReagendar = (timestamp) => {
             }
           })
           .catch(err => {
-            console.error("Error cargando horas:", err);
             hourSelect.innerHTML = '<option value="">Error al cargar</option>';
           });
       };
 
       dateInput.addEventListener('change', (e) => cargarHoras(e.target.value));
-      cargarHoras(dateInput.value); // Carga inicial para la fecha seleccionada por defecto
+      cargarHoras(dateInput.value);
     },
     preConfirm: () => {
       const date = document.getElementById('new_date').value;
@@ -85,6 +121,15 @@ const prepararReagendar = (timestamp) => {
     }
   }).then((result) => {
     if (result.isConfirmed) {
+      // --- AQUÍ DISPARAMOS TU ANIMACIÓN ---
+      const loader = document.getElementById('loader-agendapp');
+      const progressBar = document.getElementById('progress-bar');
+      const loaderMsg = document.getElementById('loader-msg');
+
+      if (loader) loader.style.display = 'flex';
+      if (progressBar) progressBar.style.width = "40%";
+      if (loaderMsg) loaderMsg.innerText = "Validando disponibilidad...";
+
       fetch(`/api/reagendar/${timestamp}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,10 +138,20 @@ const prepararReagendar = (timestamp) => {
       .then(res => res.json())
       .then(data => {
         if (data.status === 'success') {
-            Swal.fire('¡Éxito!', data.message, 'success').then(() => location.reload());
+            if (progressBar) progressBar.style.width = "100%";
+            if (loaderMsg) loaderMsg.innerText = "¡Cita reprogramada con éxito!";
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         } else {
+            if (loader) loader.style.display = 'none';
             Swal.fire('Error', data.message, 'error');
         }
+      })
+      .catch(err => {
+        if (loader) loader.style.display = 'none';
+        Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
       });
     }
   });

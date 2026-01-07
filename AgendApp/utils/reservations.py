@@ -212,7 +212,7 @@ def enviar_correo_confirmacion(reserva, calendar_link, citas_link):
                             </a>
                         </div>
                         <p style="margin-top: 20px; color: #94a3b8; font-size: 11px;">
-                            © 2026 AgendApp Soluciones Tecnológicas
+                            © 2026 AgendApp 
                         </p>
                     </div>
                 </div>
@@ -235,9 +235,19 @@ def enviar_correo_reagendacion(reserva, calendar_link, citas_link=None):
     config = cargar_config()
     empresa = config.get('empresa', 'Mi Negocio')
     smtp_conf = config.get('smtp', {})
+    wpp = config.get('whatsapp', '')
     
     destinatario = reserva.get('email')
     destinatario_admin = config.get('email_admin')
+    
+    try:
+        hora_24 = reserva.get('hora', '00:00')
+        hora_obj = datetime.strptime(hora_24, "%H:%M")
+        # %I es hora 12h, %p es AM/PM. 
+        # Usamos .lstrip("0") para que no diga "08:00 AM" sino "8:00 AM"
+        hora_12h = hora_obj.strftime("%I:%M %p").lstrip("0")
+    except Exception:
+            hora_12h = reserva.get('hora') # Backup por si falla la conversión
     
     try:
         msg = MIMEMultipart("alternative")
@@ -251,7 +261,7 @@ def enviar_correo_reagendacion(reserva, calendar_link, citas_link=None):
                 <div style="background:#f59e0b; padding:20px; text-align:center; color:white;"><h2>Cita Reagendada</h2></div>
                 <div style="padding:20px;">
                      <p>Hola <b>{reserva.get('nombre')}</b>,</p>
-                    <p>Tu cita en <b>{empresa}</b> fue reprogramada con éxito. Te esperamos el <b>{reserva.get('date')}</b> a las <b>{reserva.get('hora')}</b>.</p>
+                    <p>Tu cita en <b>{empresa}</b> fue reprogramada con éxito. Te esperamos el <b>{reserva.get('date')}</b> a las <b>{hora_12h}</b>.</p>
                         <div style="text-align:center; margin:25px 0;">
                         <a href="{calendar_link}" style="background:#4285F4; color:white; padding:12px 25px; text-decoration:none; border-radius:10px; font-weight:bold; display:inline-block;">
                            📅 Agregar a Google Calendar
@@ -259,13 +269,36 @@ def enviar_correo_reagendacion(reserva, calendar_link, citas_link=None):
                     </div>
                     <p style="margin-top:20px; font-size:12px; color:#94a3b8;">Si no solicitaste este cambio, por favor comunícate con nosotros.</p>
                 </div>
-                <div style="text-align:center; background:#f0f9ff; padding:15px; border-radius:12px; border:1px solid #e0f2fe;">
-                <p style="margin:0; font-weight:bold; color:#0ea5e9; font-size:14px;">✨ Potenciado por AgendApp</p>
-                <p style="margin:5px 0 10px 0; font-size:12px; color:#64748b;">¿Quieres un sistema de reservas como este?</p>
-                <a href="https://agendapp.co" style="background:#0ea5e9; color:white; padding:6px 15px; text-decoration:none; border-radius:8px; font-size:11px; font-weight:bold; display:inline-block;">
-                    🚀 Visítanos en agendapp.co
-                </a>
-            </div>
+
+
+                    <div style="margin-top:25px; padding:20px; background-color: #fff9f0; border-left: 4px solid #f59e0b; border-radius: 12px; color: #92400e;">
+                        <p style="margin: 0 0 10px 0; font-size: 15px; font-weight: 800;">⏰ REGLAS DE ORO</p>
+                        <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                            Para brindarte la mejor experiencia, por favor <b>llega 15 minutos antes</b> de tu cita. Si tienes algún inconveniente, avísanos de inmediato.
+                        </p>
+                        <div style="margin-top: 15px;">
+                            <a href="https://wa.me/{wpp}" style="display: inline-block; background: #25d366; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px;">
+                                📱 Escribir por WhatsApp
+                            </a>
+                        </div>
+                    </div>
+
+                     <div style="margin-top: 40px; text-align: center; border-top: 2px dashed #e2e8f0; padding-top: 30px;">
+                        <p style="margin: 0; color: #64748b; font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">¿Te gusta cómo reservaste?</p>
+                        <div style="background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); padding: 25px; border-radius: 15px; color: white;">
+                            <p style="margin: 0; font-weight: 900; font-size: 20px;">✨ AgendApp</p>
+                            <p style="margin: 5px 0 20px 0; font-size: 13px; opacity: 0.9;">Lleva tu negocio al siguiente nivel con reservas automáticas.</p>
+                            <a href="https://agendapp.co" style="background: white; color: #2563eb; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 12px; display: inline-block;">
+                                🚀 CREAR MI SISTEMA - CONTACTANOS
+                            </a>
+                        </div>
+                        <p style="margin-top: 20px; color: #94a3b8; font-size: 11px;">
+                            © 2026 AgendApp 
+                        </p>
+                    </div>
+
+
+
             
             <p style="text-align:center; font-size:11px; color:#94a3b8; margin-top:15px;">
                 📧 Este es un correo informativo automático. Por favor, <b>no respondas a este mensaje</b>.
