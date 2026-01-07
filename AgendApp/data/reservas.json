@@ -1,1 +1,13 @@
-[]
+[
+    {
+        "nombre": "diego peña",
+        "email": "instalaciones@yeminus.com",
+        "telefono": "3185861444",
+        "date": "2026-02-02",
+        "hora": "11:00",
+        "tipo_una": "peinado 2horas",
+        "duracion": 120,
+        "notes": "prueba",
+        "timestamp": "1767807193987415"
+    }
+]

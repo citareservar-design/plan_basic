@@ -114,7 +114,9 @@
                 {% for cita in citas_cliente %}
                 <tr class="hover:bg-blue-50/30 dark:hover:bg-slate-800/30 transition-colors">
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200">{{ cita.date }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-400">{{ cita.hora }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-400">
+                      {{ cita.hora_formato_12 }}
+                  </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-3 py-1 bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-400 text-[10px] font-black rounded-lg uppercase border border-brand-100 dark:border-brand-500/20">
                       {{ cita.tipo_una }}

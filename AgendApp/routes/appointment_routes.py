@@ -131,16 +131,24 @@ def citas():
     if email_buscado:
         reservas = cargar_reservas()
         citas_cliente = [r for r in reservas if r.get('email') == email_buscado]
+        
         # Ordenamos las citas por fecha y hora
         citas_cliente.sort(key=lambda x: (x['date'], x['hora']))
+
+        # --- CONVERSIÓN A 12 HORAS ---
+        for cita in citas_cliente:
+            try:
+                # Tomamos la hora (ej: "15:30") y la volvemos objeto de tiempo
+                hora_24 = datetime.strptime(cita['hora'], "%H:%M")
+                # La guardamos en un nuevo campo para el cliente (ej: "03:30 PM")
+                cita['hora_formato_12'] = hora_24.strftime("%I:%M %p")
+            except Exception as e:
+                # Si algo falla, dejamos la original para no romper la página
+                cita['hora_formato_12'] = cita['hora']
     
     return render_template('citas.html', 
                             citas_cliente=citas_cliente, 
                             email_buscado=email_buscado)
-
-@appointment_bp.route('/reserva_exitosa')
-def reserva_exitosa(): 
-    return render_template('reserva_exitosa.html')
 
 
 
