@@ -34,11 +34,15 @@ def index():
 def form():
     hoy = datetime.now().strftime("%Y-%m-%d")
     
+    # 1. Cargamos la configuración (servicios, empresa, etc.)
+    from utils.reservations import cargar_config, cargar_reservas
+    config = cargar_config()
+    servicios_config = config.get('servicios', {})
+
     if request.method == 'POST':
         try:
             data = request.form.to_dict()
             
-            # VALIDACIÓN: Bloqueo de domingos al crear cita
             if es_domingo(data.get('date')):
                 flash("Lo sentimos, los domingos no estamos disponibles para citas.", "danger")
                 return redirect(url_for('appointment.form'))
@@ -55,6 +59,33 @@ def form():
             flash(f"Error al procesar la reserva: {str(e)}", "danger")
             return redirect(url_for('appointment.form'))
 
+    # Lógica para mostrar el formulario (GET)
+    fecha_a_mostrar = request.args.get('date', hoy)
+    
+    if es_domingo(fecha_a_mostrar):
+        flash("📅 Has seleccionado un domingo. Por favor, elige otro día de la semana.", "warning")
+        horas_libres = []
+    else:
+        reservas = cargar_reservas()
+        horas_libres = obtener_horas_disponibles(reservas, fecha_a_mostrar)
+
+    form_data = {
+        'nombre': request.args.get('nombre', ''),
+        'email': request.args.get('email', ''),
+        'notas': request.args.get('notes', ''),
+        'tipo_una': request.args.get('tipo_una', ''),
+        'telefono': request.args.get('telefono', ''),
+        'hora_previa': request.args.get('hora', '')
+    }
+
+    return render_template(
+        'form.html',
+        hoy=hoy,
+        horas_libres=horas_libres,
+        fecha_seleccionada=fecha_a_mostrar,
+        form_data=form_data,
+        servicios=servicios_config  # <--- IMPORTANTE: Enviamos los servicios al HTML
+    )
     fecha_a_mostrar = request.args.get('date', hoy)
     
     # VALIDACIÓN: Si el usuario selecciona domingo en el selector de fecha

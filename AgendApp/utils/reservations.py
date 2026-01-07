@@ -5,28 +5,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 
-# --- Configuración de Rutas Relativas ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JSON_PATH = os.path.join(BASE_DIR, 'data', 'reservas.json')
 CONFIG_PATH = os.path.join(BASE_DIR, 'data', 'config.json')
-
-HORAS_DISPONIBLES = [
-    "08:00", "09:00", "10:00", "11:00", "12:00", 
-    "14:00", "15:00", "16:00", "17:00", "18:00"
-]
-
-DURACION_SERVICIOS = {
-    "Semipermanente": 60,
-    "Soft Gel": 120,
-    "Poly Gel": 120,
-    "Base Rubber": 60,
-    "Decoración": 60,
-}
-
-SMTP_SERVER = 'smtp.gmail.com'
-SMTP_PORT = 587
-EMAIL_FROM = 'citareservar@gmail.com' 
-EMAIL_PASSWORD = 'dren psgm ncqx lrpy' 
 
 # --- Funciones de Configuración y I/O ---
 
@@ -40,15 +21,65 @@ def formatear_hora_12h(hora_24):
         return hora_24
     
 
+# --- MODIFICACIÓN EN CARGAR_CONFIG ---
 def cargar_config():
-    """Carga la configuración de la empresa desde el JSON."""
+    """Carga la configuración desde el JSON o devuelve valores por defecto."""
     try:
         if os.path.exists(CONFIG_PATH):
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 return json.load(f)
-        return {"empresa": "Mi Negocio", "email_admin": "diego251644@gmail.com"}
+    except Exception as e:
+        print(f"Error cargando config: {e}")
+    
+    # Valores de respaldo por si el archivo no existe o está mal escrito
+    return {
+        "empresa": "Mi Negocio", 
+        "email_admin": "admin@mail.com",
+        "horarios_base": ["08:00", "09:00", "10:00"],
+        "servicios": {"General": 60}
+    }
+
+# --- ESTAS VARIABLES AHORA SON DINÁMICAS ---
+# Reemplaza donde uses HORAS_DISPONIBLES y DURACION_SERVICIOS por esto:
+config_data = cargar_config()
+HORAS_DISPONIBLES = config_data.get("horarios_base", [])
+DURACION_SERVICIOS = config_data.get("servicios", {})
+
+# --- MODIFICACIÓN EN LAS FUNCIONES DE CORREO ---
+def enviar_correo_generico(msg, config):
+    """Función auxiliar para no repetir código de envío"""
+    smtp_conf = config.get('smtp', {})
+    try:
+        server = smtplib.SMTP(smtp_conf.get('server'), smtp_conf.get('port'))
+        server.starttls()
+        server.login(smtp_conf.get('email'), smtp_conf.get('password'))
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Error SMTP: {e}")
+        return False
+
+# Ejemplo de cómo queda ahora enviar_correo_confirmacion:
+def enviar_correo_confirmacion(reserva, calendar_link, citas_link):
+    config = cargar_config()
+    empresa = config.get('empresa')
+    smtp_conf = config.get('smtp', {})
+    
+    destinatario = reserva.get('email')
+    
+    try:
+        msg = MIMEMultipart("alternative")
+        # Usamos el email configurado en el JSON
+        msg['From'] = f"{empresa} <{smtp_conf.get('email')}>" 
+        msg['To'] = destinatario
+        msg['Subject'] = f'📌 ¡Cita Confirmada! - {empresa}'
+        
+        # ... (aquí va tu html_body igual que antes) ...
+        
+        return enviar_correo_generico(msg, config)
     except:
-        return {"empresa": "Mi Negocio", "email_admin": "diego251644@gmail.com"}
+        return False
 
 def cargar_reservas():
     if os.path.exists(JSON_PATH):
@@ -80,14 +111,21 @@ def format_google_calendar_datetime(date_str, time_str, duration_minutes):
     except: return "", ""
 
 def get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar):
+    # CARGAR CONFIG AQUÍ PARA QUE SEA TIEMPO REAL
+    config = cargar_config()
+    horas_base = config.get("horarios_base", []) 
+    
     horas_ocupadas = set()
     reservas_del_dia = [r for r in reservas if r.get("date") == fecha_a_mostrar]
+    
     for r in reservas_del_dia:
         try:
             inicio = datetime.strptime(f"{fecha_a_mostrar} {r['hora']}", "%Y-%m-%d %H:%M")
             duracion = r.get("duracion", 60)
             fin = inicio + timedelta(minutes=duracion)
-            for h_disp in HORAS_DISPONIBLES:
+            
+            # USAR LAS HORAS DEL JSON
+            for h_disp in horas_base:
                 posible = datetime.strptime(f"{fecha_a_mostrar} {h_disp}", "%Y-%m-%d %H:%M")
                 if inicio <= posible < fin:
                     horas_ocupadas.add(h_disp)
@@ -99,61 +137,93 @@ def get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar):
 def enviar_correo_confirmacion(reserva, calendar_link, citas_link):
     config = cargar_config()
     empresa = config.get('empresa', 'Mi Negocio')
-    destinatario = reserva.get('email')
-    destinatario_admin = config.get('email_admin')
+    wpp = config.get('whatsapp', '')
+    smtp_conf = config.get('smtp', {})
     
+    # Bloque de Publicidad y Notas (Footer)
+# Bloque de Publicidad y Notas (Footer) actualizado
+    footer_html = f"""
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid #e2e8f0; color:#475569; font-size:13px;">
+            <p>⚠️ <b>Recordatorio importante:</b> Por favor, llega <b>15 minutos antes</b> de tu cita. 
+            Si no puedes llegar a tiempo, avísanos por WhatsApp: 
+            <a href="https://wa.me/{wpp}" style="color:#25D366; font-weight:bold; text-decoration:none;">📱 Chatear ahora</a></p>
+            
+            <hr style="border:none; border-top:1px solid #f1f5f9; margin:20px 0;">
+            
+            <div style="text-align:center; background:#f0f9ff; padding:15px; border-radius:12px; border:1px solid #e0f2fe;">
+                <p style="margin:0; font-weight:bold; color:#0ea5e9; font-size:14px;">✨ Potenciado por AgendApp</p>
+                <p style="margin:5px 0 10px 0; font-size:12px; color:#64748b;">¿Quieres un sistema de reservas como este?</p>
+                <a href="https://agendapp.co" style="background:#0ea5e9; color:white; padding:6px 15px; text-decoration:none; border-radius:8px; font-size:11px; font-weight:bold; display:inline-block;">
+                    🚀 Visítanos en agendapp.co
+                </a>
+            </div>
+            
+            <p style="text-align:center; font-size:11px; color:#94a3b8; margin-top:15px;">
+                📧 Este es un correo informativo automático. Por favor, <b>no respondas a este mensaje</b>.
+            </p>
+        </div>
+    """
+
     try:
         msg = MIMEMultipart("alternative")
-        msg['From'] = f"{empresa} <{EMAIL_FROM}>"
-        msg['To'] = destinatario
-        msg['cc'] = destinatario_admin
+        msg['From'] = f"{empresa} <{smtp_conf.get('email')}>"
+        msg['To'] = reserva.get('email')
+        msg['cc'] = config.get('email_admin')
         msg['Subject'] = f'📌 ¡Cita Confirmada! - {empresa}'
         
         html_body = f"""<div style="font-family:sans-serif; padding:20px; background:#f1f5f9;">
             <div style="background:white; border-radius:15px; max-width:500px; margin:auto; border:1px solid #e2e8f0; overflow:hidden;">
-                <div style="background:#0ea5e9; padding:20px; text-align:center; color:white;"><h2>Cita Confirmada</h2></div>
+                <div style="background:#0ea5e9; padding:20px; text-align:center; color:white;"><h2 style="margin:0;">Cita Confirmada</h2></div>
                 <div style="padding:20px;">
-                    <p>
-                        Hola <b>{reserva.get('nombre')}</b>,<br><br>
-                        Tu cita para <b>{reserva.get('tipo_una')}</b> en <b>{empresa}</b> ha sido confirmada.<br>
-                        📅 <b>Día:</b> {reserva.get('date')}<br>
-                        ⏰ <b>Hora:</b> {reserva.get('hora')}<br><br>
-                    </p>
-
+                    <p>Hola <b>{reserva.get('nombre')}</b>,</p>
+                    <p>Tu cita para <b>{reserva.get('tipo_una')}</b> ha sido agendada con éxito.</p>
+                    <p>📅 <b>Día:</b> {reserva.get('date')}<br>⏰ <b>Hora:</b> {reserva.get('hora')}</p>
+                    
                     <div style="text-align:center; margin:25px 0;">
-                        <a href="{calendar_link}" style="background:#4285F4; color:white; padding:12px 25px; text-decoration:none; border-radius:10px; font-weight:bold; display:inline-block;">
-                           📅 Agregar a Google Calendar
-                        </a>
-                         <a href="{citas_link}" style="background:#4285F4; color:white; padding:12px 25px; text-decoration:none; border-radius:10px; font-weight:bold; display:inline-block;">
-                           📋 Ver Mis Citas
-                        </a>
+                        <a href="{calendar_link}" style="background:#4285F4; color:white; padding:12px 25px; text-decoration:none; border-radius:10px; font-weight:bold; display:inline-block; margin-bottom:10px;">📅 Google Calendar</a>
+                        <a href="{citas_link}" style="background:#64748b; color:white; padding:12px 25px; text-decoration:none; border-radius:10px; font-weight:bold; display:inline-block;">📋 Ver Mis Citas</a>
                     </div>
-
-                    <p style="font-size:12px; color:#64748b; text-align:center;">
-                        Si necesitas realizar algún cambio, comunícate con nosotros.
-                    </p>
+                    {footer_html}
                 </div>
             </div>
+                 <div style="text-align:center; background:#f0f9ff; padding:15px; border-radius:12px; border:1px solid #e0f2fe;">
+                <p style="margin:0; font-weight:bold; color:#0ea5e9; font-size:14px;">✨ Potenciado por AgendApp</p>
+                <p style="margin:5px 0 10px 0; font-size:12px; color:#64748b;">¿Quieres un sistema de reservas como este?</p>
+                <a href="https://agendapp.co" style="background:#0ea5e9; color:white; padding:6px 15px; text-decoration:none; border-radius:8px; font-size:11px; font-weight:bold; display:inline-block;">
+                    🚀 Visítanos en agendapp.co
+                </a>
+            </div>
+            
+            <p style="text-align:center; font-size:11px; color:#94a3b8; margin-top:15px;">
+                📧 Este es un correo informativo automático. Por favor, <b>no respondas a este mensaje</b>.
+            </p>
+        </div>
         </div>"""
         
         msg.attach(MIMEText(html_body, 'html'))
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT); server.starttls()
-        server.login(EMAIL_FROM, EMAIL_PASSWORD); server.send_message(msg); server.quit()
+        server = smtplib.SMTP(smtp_conf.get('server'), smtp_conf.get('port'))
+        server.starttls()
+        server.login(smtp_conf.get('email'), smtp_conf.get('password'))
+        server.send_message(msg); server.quit()
         return True
-    except: return False
+    except Exception as e:
+        print(f"Error: {e}"); return False
 
-def enviar_correo_reagendacion(reserva, calendar_link,citas_link=None):
+def enviar_correo_reagendacion(reserva, calendar_link, citas_link=None):
     config = cargar_config()
-    empresa = config.get('empresa', '{{config.empresa}}')
+    empresa = config.get('empresa', 'Mi Negocio')
+    smtp_conf = config.get('smtp', {})
+    
     destinatario = reserva.get('email')
     destinatario_admin = config.get('email_admin')
     
     try:
         msg = MIMEMultipart("alternative")
-        msg['From'] = f"{empresa} <{EMAIL_FROM}>"
+        msg['From'] = f"{empresa} <{smtp_conf.get('email')}>"
         msg['To'] = destinatario
         msg['cc'] = destinatario_admin
-        msg['Subject'] = f'🕜 Cita Reagendada - {empresa}'
+        msg['Subject'] = f'Cita Reagendada - {empresa}'
+
         html_body = f"""<div style="font-family:sans-serif; padding:20px; background:#fff7ed;">
             <div style="background:white; border-radius:15px; max-width:500px; margin:auto; border:1px solid #fed7aa; overflow:hidden;">
                 <div style="background:#f59e0b; padding:20px; text-align:center; color:white;"><h2>Cita Reagendada</h2></div>
@@ -167,26 +237,47 @@ def enviar_correo_reagendacion(reserva, calendar_link,citas_link=None):
                     </div>
                     <p style="margin-top:20px; font-size:12px; color:#94a3b8;">Si no solicitaste este cambio, por favor comunícate con nosotros.</p>
                 </div>
+                <div style="text-align:center; background:#f0f9ff; padding:15px; border-radius:12px; border:1px solid #e0f2fe;">
+                <p style="margin:0; font-weight:bold; color:#0ea5e9; font-size:14px;">✨ Potenciado por AgendApp</p>
+                <p style="margin:5px 0 10px 0; font-size:12px; color:#64748b;">¿Quieres un sistema de reservas como este?</p>
+                <a href="https://agendapp.co" style="background:#0ea5e9; color:white; padding:6px 15px; text-decoration:none; border-radius:8px; font-size:11px; font-weight:bold; display:inline-block;">
+                    🚀 Visítanos en agendapp.co
+                </a>
+            </div>
+            
+            <p style="text-align:center; font-size:11px; color:#94a3b8; margin-top:15px;">
+                📧 Este es un correo informativo automático. Por favor, <b>no respondas a este mensaje</b>.
+            </p>
+        </div>
             </div>
         </div>"""
         msg.attach(MIMEText(html_body, 'html'))
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT); server.starttls()
-        server.login(EMAIL_FROM, EMAIL_PASSWORD); server.send_message(msg); server.quit()
+
+        # Conexión SMTP dinámica
+        server = smtplib.SMTP(smtp_conf.get('server'), smtp_conf.get('port'))
+        server.starttls()
+        server.login(smtp_conf.get('email'), smtp_conf.get('password'))
+        server.send_message(msg)
+        server.quit()
         return True
-    except: return False
+    except Exception as e:
+        print(f"Error reagendando: {e}")
+        return False
 
 def enviar_correo_cancelacion(reserva):
     config = cargar_config()
-    empresa = config.get('empresa', '{{config.empresa}}')
+    empresa = config.get('empresa', 'Mi Negocio')
+    smtp_conf = config.get('smtp', {})
+    
     destinatario = reserva.get('email')
     destinatario_admin = config.get('email_admin')
     
     try:
         msg = MIMEMultipart("alternative")
-        msg['From'] = f"{empresa} <{EMAIL_FROM}>"
+        msg['From'] = f"{empresa} <{smtp_conf.get('email')}>"
         msg['To'] = destinatario
         msg['cc'] = destinatario_admin
-        msg['Subject'] = f'🚫 Cita Cancelada - {empresa}'
+        msg['Subject'] = f'Cita Cancelada - {empresa}'
         
         html_body = f"""
         <div style="font-family:sans-serif; padding:20px; background:#fef2f2;">
@@ -198,11 +289,30 @@ def enviar_correo_cancelacion(reserva):
                     <div style="background:#f8fafc; padding:15px; border-radius:10px; margin-top:20px;">
                         <p style="margin:0;"><b>Servicio:</b> {reserva.get('tipo_una')}</p>
                     </div>
+                    <div style="text-align:center; background:#f0f9ff; padding:15px; border-radius:12px; border:1px solid #e0f2fe;">
+                <p style="margin:0; font-weight:bold; color:#0ea5e9; font-size:14px;">✨ Potenciado por AgendApp</p>
+                <p style="margin:5px 0 10px 0; font-size:12px; color:#64748b;">¿Quieres un sistema de reservas como este?</p>
+                <a href="https://agendapp.co" style="background:#0ea5e9; color:white; padding:6px 15px; text-decoration:none; border-radius:8px; font-size:11px; font-weight:bold; display:inline-block;">
+                    🚀 Visítanos en agendapp.co
+                </a>
+            </div>
+            
+            <p style="text-align:center; font-size:11px; color:#94a3b8; margin-top:15px;">
+                📧 Este es un correo informativo automático. Por favor, <b>no respondas a este mensaje</b>.
+            </p>
+        </div>
                 </div>
             </div>
         </div>"""
         msg.attach(MIMEText(html_body, 'html'))
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT); server.starttls()
-        server.login(EMAIL_FROM, EMAIL_PASSWORD); server.send_message(msg); server.quit()
+
+        # Conexión SMTP dinámica
+        server = smtplib.SMTP(smtp_conf.get('server'), smtp_conf.get('port'))
+        server.starttls()
+        server.login(smtp_conf.get('email'), smtp_conf.get('password'))
+        server.send_message(msg)
+        server.quit()
         return True
-    except: return False
+    except Exception as e:
+        print(f"Error cancelando: {e}")
+        return False

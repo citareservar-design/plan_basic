@@ -12,22 +12,31 @@ from utils.reservations import (
 )
 
 def obtener_horas_disponibles(reservas, fecha_a_mostrar):
-    from utils.reservations import get_horas_ocupadas_por_superposicion
+    # 1. Cargamos la configuración del JSON en este momento
+    from utils.reservations import get_horas_ocupadas_por_superposicion, cargar_config
+    
+    config = cargar_config()
+    # 2. Obtenemos la lista de horas del JSON (y usamos la vieja de respaldo si falla)
+    horas_desde_json = config.get("horarios_base", [])
+    
     horas_ocupadas = get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar)
     ahora = datetime.now()
     horas_libres = []
     
-    for h in HORAS_DISPONIBLES:
+    # 3. CAMBIO CLAVE: Iteramos sobre la lista que viene del JSON
+    for h in horas_desde_json:
         h = h.strip()
         if h in horas_ocupadas: continue
         try:
+            # Validación de fecha y hora para no mostrar horas pasadas
             if datetime.strptime(f"{fecha_a_mostrar} {h}", "%Y-%m-%d %H:%M") > ahora:
-                # ENVIAMOS UN DICCIONARIO: valor para el back y texto para el cliente
                 horas_libres.append({
                     'valor': h, 
                     'texto': formatear_hora_12h(h)
                 })
-        except: continue
+        except: 
+            continue
+            
     return horas_libres
 
 
@@ -35,13 +44,25 @@ def obtener_horas_libres_reagendar(fecha):
     return obtener_horas_disponibles(cargar_reservas(), fecha)
 
 def crear_cita(data, host_url):
+    # 1. Cargamos las reservas y la configuración actual
+    from utils.reservations import cargar_reservas, guardar_reservas, cargar_config
+    
     reservas = cargar_reservas()
+    config = cargar_config()
+    
+    # 2. Obtenemos el diccionario de servicios del JSON
+    # Si no existe en el JSON, usamos un diccionario vacío {}
+    servicios_config = config.get('servicios', {})
     
     # Extraer variables necesarias del diccionario 'data'
     fecha = data.get('date')
     hora = data.get('hora')
     servicio = data.get('tipo_una')
-    duracion = DURACION_SERVICIOS.get(servicio, 60)
+    
+    # 3. CAMBIO CLAVE: Buscamos la duración en el JSON. 
+    # Si el servicio no existe allí, le damos 60 minutos por defecto.
+    duracion = servicios_config.get(servicio, 60)
+    
     timestamp = str(datetime.now().timestamp()).replace('.', '')
 
     nueva_cita = {
@@ -51,7 +72,7 @@ def crear_cita(data, host_url):
         'date': fecha, 
         'hora': hora, 
         'tipo_una': servicio, 
-        'duracion': duracion,
+        'duracion': duracion, # Ahora esta duración es la del JSON
         'notes': data.get('notes', ''), 
         'timestamp': timestamp
     }
@@ -64,7 +85,7 @@ def crear_cita(data, host_url):
     cal_link = f"https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Nails&dates={start}/{end}"
     citas_link = f"{host_url}citas?email_cliente={nueva_cita['email']}"
     
-    # Enviar correo (Asegúrate que reservations.py acepte 3 argumentos)
+    # Enviar correo
     enviar_correo_confirmacion(nueva_cita, cal_link, citas_link)
     
     return {"status": "success"}
