@@ -77,3 +77,21 @@ img {
 .group:hover span.text-slate-900 {
     color: #0ea5e9; /* Sky-500 al pasar el mouse */
 }
+
+
+
+/* el cargar la reserva */
+
+.spinner-border {
+    width: 80px;
+    height: 80px;
+    border: 3px solid #f1f5f9;
+    border-top: 3px solid #0ea5e9;
+    border-radius: 50%;
+    animation: spinAgendApp 0.8s linear infinite;
+}
+
+@keyframes spinAgendApp {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from utils.reservations import (
     cargar_reservas, 
     guardar_reservas, 
@@ -8,47 +8,80 @@ from utils.reservations import (
     enviar_correo_reagendacion,
     enviar_correo_cancelacion, # Nueva importación
     HORAS_DISPONIBLES,
-    formatear_hora_12h
+    formatear_hora_12h,
+    cargar_config, get_horas_ocupadas_por_superposicion
 )
 
-def obtener_horas_disponibles(reservas, fecha_a_mostrar):
+
+from datetime import datetime, timedelta
+
+def obtener_horas_disponibles(reservas, fecha_a_mostrar, duracion_servicio=60):
     from utils.reservations import get_horas_ocupadas_por_superposicion, cargar_config
-    from datetime import datetime
     
     config = cargar_config()
-    horas_desde_json = config.get("horarios_base", [])
-    # Obtenemos el almuerzo del JSON
-    almuerzo = config.get('almuerzo', {"inicio": "12:00", "fin": "13:00"})
+    horas_base = config.get("horarios_base", [])
+    almuerzo = config.get('almuerzo', {"inicio": "12:00", "fin": "14:00"})
+    hora_cierre_str = config.get('hora_cierre', '20:00')
     
     horas_ocupadas = get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar)
     ahora = datetime.now()
     horas_libres = []
-    
-    for h in horas_desde_json:
+
+    # Convertimos hora de cierre a objeto time para comparar
+    dt_cierre = datetime.strptime(hora_cierre_str, "%H:%M").time()
+
+    for h in horas_base:
         h = h.strip()
         
-        # 1. Saltamos si la hora ya está ocupada por una reserva
-        if h in horas_ocupadas: 
+        # 1. Filtro Ocupado (Citas ya existentes)
+        if h in horas_ocupadas:
             continue
-            
-        # 2. NUEVO: Filtro de Almuerzo
-        # Comparamos si la hora actual 'h' está dentro del rango de almuerzo
-        if almuerzo['inicio'] <= h < almuerzo['fin']:
-            continue
-            
+        
         try:
-            # 3. Validación para no mostrar horas que ya pasaron hoy
-            fecha_hora_slot = datetime.strptime(f"{fecha_a_mostrar} {h}", "%Y-%m-%d %H:%M")
-            if fecha_hora_slot > ahora:
-                horas_libres.append({
-                    'valor': h, 
-                    'texto': formatear_hora_12h(h)
-                })
-        except: 
+            # Convertimos la hora actual del ciclo a objeto datetime para cálculos
+            hora_inicio_dt = datetime.strptime(h, "%H:%M")
+            # Sumamos la duración real del servicio (ej: 120 min)
+            hora_fin_dt = hora_inicio_dt + timedelta(minutes=int(duracion_servicio))
+            
+            # --- NUEVA LÓGICA DE COLISIÓN DE ALMUERZO ---
+            # Definimos los límites del almuerzo
+            almuerzo_inicio = datetime.strptime(almuerzo['inicio'], "%H:%M")
+            almuerzo_fin = datetime.strptime(almuerzo['fin'], "%H:%M")
+
+            # REGLA: Si la cita empieza antes de que termine el almuerzo 
+            # Y termina después de que el almuerzo empiece -> HAY CRUCE
+            if hora_inicio_dt < almuerzo_fin and hora_fin_dt > almuerzo_inicio:
+                continue
+
+            # --- FILTRO DE CIERRE ---
+            # Si termina después del cierre (ej: 18:01 cerrando a las 18:00) -> BLOQUEAR
+            if hora_fin_dt.time() > dt_cierre:
+                continue
+
+            # --- FILTRO DE HORAS PASADAS (Solo si es HOY) ---
+            fecha_hoy = ahora.strftime("%Y-%m-%d")
+            if fecha_a_mostrar == fecha_hoy:
+                # Si la hora de inicio es menor a la hora actual del servidor -> BLOQUEAR
+                if hora_inicio_dt.time() < ahora.time():
+                    continue
+
+# Creamos el texto en formato 12 horas para el cliente
+            # %I: hora (01-12), %M: minutos, %p: AM/PM
+            hora_12h = hora_inicio_dt.strftime("%I:%M %p")
+
+            # Guardamos: 
+            # 'valor' -> "14:00" (Para que el servidor lo entienda)
+            # 'texto' -> "02:00 PM" (Para que el cliente lo vea bonito)
+            horas_libres.append({
+                'valor': h, 
+                'texto': hora_12h
+            })
+            
+        except Exception as e:
+            print(f"Error procesando la hora {h}: {e}")
             continue
             
     return horas_libres
-
 
 def obtener_horas_libres_reagendar(fecha):
     return obtener_horas_disponibles(cargar_reservas(), fecha)

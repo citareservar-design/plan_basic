@@ -40,6 +40,7 @@ def edit_config():
         return render_template('admin_login.html')
 
     # 2. PROCESAR ACTUALIZACIÓN (POST)
+# 2. PROCESAR ACTUALIZACIÓN (POST)
     if request.method == 'POST':
         try:
             # Capturamos servicios dinámicos
@@ -51,12 +52,13 @@ def edit_config():
                 if n.strip():
                     nuevos_servicios[n.strip()] = int(d) if d else 60
 
-            # Construimos la estructura completa incluyendo ALMUERZO
+            # CONSTRUCCIÓN CORRECTA DE LA ESTRUCTURA
             nueva_config = {
                 "admin_password": request.form.get('admin_password') or config.get('admin_password'),
                 "empresa": request.form.get('empresa'),
                 "email_admin": request.form.get('email_admin'),
                 "whatsapp": request.form.get('whatsapp'),
+                "hora_cierre": request.form.get('hora_cierre', '17:00'), # Va afuera del almuerzo
                 "almuerzo": {
                     "inicio": request.form.get('almuerzo_inicio', '12:00'),
                     "fin": request.form.get('almuerzo_fin', '13:00')
@@ -71,16 +73,16 @@ def edit_config():
                 "servicios": nuevos_servicios
             }
             
-            # Guardado Seguro: Primero generamos el texto, luego abrimos el archivo
+            # Guardado Seguro
             contenido_json = json.dumps(nueva_config, indent=4, ensure_ascii=False)
             with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
                 f.write(contenido_json)
             
-            flash("¡Configuración y almuerzo actualizados!", "success")
+            flash("¡Configuración actualizada con éxito!", "success")
             return redirect(url_for('admin.edit_config'))
             
         except Exception as e:
-            flash(f"Error al guardar la configuración: {str(e)}", "danger")
+            flash(f"Error al guardar: {str(e)}", "danger")
             return redirect(url_for('admin.edit_config'))
 
     # 3. MOSTRAR PANEL (GET)

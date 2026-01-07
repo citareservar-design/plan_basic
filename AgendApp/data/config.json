@@ -3,9 +3,10 @@
     "empresa": "Uñas perfectas",
     "email_admin": "diego251644@gmail.com",
     "whatsapp": "573001234567",
+    "hora_cierre": "19:00",
     "almuerzo": {
         "inicio": "12:00",
-        "fin": "14:00"
+        "fin": "13:00"
     },
     "smtp": {
         "server": "smtp.gmail.com",
@@ -23,10 +24,13 @@
         "14:00",
         "15:00",
         "16:00",
-        "17:00"
+        "17:00",
+        "18:00"
+
     ],
     "servicios": {
-        "peinado": 120,
-        "limpieza": 180
+        "peinado 2horas": 120,
+        "limpieza 3horas": 180,
+        "diego motilar 1hora": 60
     }
 }

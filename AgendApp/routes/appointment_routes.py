@@ -1,6 +1,8 @@
 import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from datetime import datetime
+from utils.reservations import cargar_config, cargar_reservas
+from services.appointment_service import obtener_horas_disponibles
 
 # Importamos los servicios y utilidades necesarios
 from services.appointment_service import (
@@ -67,7 +69,15 @@ def form():
         horas_libres = []
     else:
         reservas = cargar_reservas()
-        horas_libres = obtener_horas_disponibles(reservas, fecha_a_mostrar)
+        # 1. Obtenemos el servicio que eligió el usuario (si ya eligió uno)
+        servicio_seleccionado = request.args.get('servicio') 
+
+        # 2. Buscamos cuánto dura ese servicio en el config.json
+        config = cargar_config()
+        duracion = config.get('servicios', {}).get(servicio_seleccionado, 60) # 60 es el respaldo
+
+        # 3. AHORA SÍ, le pasamos los 3 datos a la función
+        horas_libres = obtener_horas_disponibles(reservas, fecha_a_mostrar, duracion)
 
     form_data = {
         'nombre': request.args.get('nombre', ''),
@@ -132,15 +142,34 @@ def citas():
 def reserva_exitosa(): 
     return render_template('reserva_exitosa.html')
 
+
+
+
+
+
 # --- NUEVAS RUTAS API PARA FUNCIONES MÓVILES ---
 
 @appointment_bp.route('/api/horas-disponibles/<fecha>')
 def api_horas_disponibles(fecha):
-    # VALIDACIÓN: Bloqueo de domingos en la API de horas
-    if es_domingo(fecha):
-        return jsonify([]) # Retorna lista vacía si es domingo
-        
-    horas = obtener_horas_libres_reagendar(fecha)
+    # 1. Obtenemos el nombre del servicio que viene del móvil
+    servicio_nombre = request.args.get('servicio', '').lower()
+    
+    # 2. Cargamos el config para buscar cuánto dura ESE servicio
+    config = cargar_config()
+    servicios = config.get('servicios', {})
+    
+    # 3. Buscamos la duración. Si el cliente agregó uno nuevo, aquí lo encontrará
+    # Si no lo encuentra, usa 60 min por seguridad
+    duracion = servicios.get(servicio_nombre, 60)
+    
+    # DEBUG: Esto saldrá en tu consola negra, revisa que diga el número correcto
+    print(f"DEBUG: El servicio '{servicio_nombre}' dura {duracion} minutos.")
+    
+    reservas = cargar_reservas()
+    
+    # 4. Le pasamos la duración real a la lógica
+    horas = obtener_horas_disponibles(reservas, fecha, duracion_servicio=duracion)
+    
     return jsonify(horas)
 
 @appointment_bp.route('/api/reagendar/<timestamp>', methods=['POST'])
@@ -177,3 +206,29 @@ def cancelar_cita(timestamp):
         return redirect(url_for('appointment.citas', email_cliente=reserva_a_borrar.get('email')))
 
     return redirect(url_for('appointment.index'))
+
+
+
+@appointment_bp.route('/confirmar-reserva', methods=['POST'])
+def confirmar_reserva_api():
+    try:
+        # 1. Recibimos los datos del JSON enviado por el JS
+        data = request.get_json()
+        
+        # Validamos que no sea domingo (seguridad extra)
+        if es_domingo(data.get('date')):
+            return jsonify({"status": "error", "message": "Los domingos no abrimos."}), 400
+
+        # 2. Llamamos a tu función crear_cita (que ya importa arriba)
+        # request.host_url es para los links de los correos
+        resultado = crear_cita(data, request.host_url) 
+
+        if "error" in resultado:
+            return jsonify({"status": "error", "message": resultado['error']}), 400
+
+        # 3. Si todo sale bien, respondemos éxito
+        return jsonify({"status": "success", "message": "Reserva confirmada"}), 200
+
+    except Exception as e:
+        print(f"Error en confirmar_reserva_api: {str(e)}")
+        return jsonify({"status": "error", "message": "Ocurrió un error interno en el servidor."}), 500

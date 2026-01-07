@@ -100,94 +100,142 @@
 
       <div class="glass-panel shadow-2xl shadow-sky-900/10 rounded-[2.5rem] p-8 md:p-12 w-full">
         <form action="{{ url_for('appointment.form') }}" method="POST" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">Fecha de
-                Cita</label>
-              <div class="relative group">
-                <i class="fa-regular fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-sky-500"></i>
-                <input type="date" name="date" id="date" required min="{{ hoy }}" value="{{ fecha_seleccionada }}"
-                  onchange="validarYEnviar(this)"
-                  class="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold" />
-              </div>
-            </div>
-
-            <div class="relative group">
-              <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">Hora
-                Disponible</label>
-              <div class="relative">
-                <i class="fa-regular fa-clock absolute left-4 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
-                <select name="hora" id="select-horas" required
-                  class="w-full pl-12 pr-10 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold appearance-none focus:border-sky-500 focus:bg-white cursor-pointer hover:border-slate-300">
-                  <option value="" disabled selected>
-                    Selecciona una hora...
-                  </option>
-                  {% for h in horas_libres %}
-                  <option value="{{ h.valor }}" class="bg-white text-slate-900 font-semibold" {% if
-                    h.valor==form_data.hora_previa %}selected{% endif %}>
-                    {{ h.texto }}
-                  </option>
-                  {% endfor %}
-                </select>
-                <i
-                  class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-sky-500 transition-colors"></i>
-              </div>
-            </div>
-          </div>
-
-<div class="space-y-4">
-  <div class="relative group">
-    <i class="fa-solid fa-user absolute left-5 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
-    <input type="text" name="nombre" placeholder="Nombre completo" required
-      class="w-full pl-12 pr-5 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold focus:border-sky-500 focus:bg-white" />
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div>
+    <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">
+      Fecha de Cita
+    </label>
+    <div class="relative group">
+      <i class="fa-regular fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
+      <input type="date" 
+             name="date" 
+             id="date" 
+             required 
+             min="{{ hoy }}" 
+             value="{{ fecha_seleccionada }}"
+             onchange="validarYEnviar()"
+             class="w-full pl-12 pr-4 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold focus:border-sky-500 focus:bg-white" />
+    </div>
   </div>
+
+  <div>
+    <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">
+      Tipo de Servicio
+    </label>
+<div class="relative group">
+  <i class="fa-solid fa-wand-magic-sparkles absolute left-4 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
+  
+  <select name="tipo_una" 
+          id="servicio" 
+          required 
+          onchange="validarYEnviar()"
+          class="w-full pl-12 pr-10 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold appearance-none focus:border-sky-500 focus:bg-white cursor-pointer">
+    <option value="" disabled selected>Selecciona un servicio...</option>
+    {% for nombre, duracion in servicios.items() %}
+      <option value="{{ nombre }}" {% if nombre == form_data.tipo_una %}selected{% endif %}>
+        {{ nombre }}
+      </option>
+    {% endfor %}
+  </select>
+  
+  <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+</div>
+  </div>
+</div>
+          
+          
+
+
+          
+          <div class="space-y-4">
+            <div class="relative group">
+              <i class="fa-solid fa-user absolute left-5 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
+    <input type="text" name="nombre" placeholder="Nombre completo" id="nombre" required
+      class="w-full pl-12 pr-5 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold focus:border-sky-500 focus:bg-white" />
+    </div>
 
   <div class="relative group">
     <i class="fa-solid fa-envelope absolute left-5 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
-    <input type="email" name="email" placeholder="Correo electrónico" required
-      class="w-full pl-12 pr-5 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold focus:border-sky-500 focus:bg-white" />
+    <input type="email" name="email" placeholder="Correo electrónico"  id="email" required
+    class="w-full pl-12 pr-5 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold focus:border-sky-500 focus:bg-white" />
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div>
+    <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">
+      Número de WhatsApp
+    </label>
     <div class="relative group">
-      <i class="fa-solid fa-phone absolute left-5 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
-      <input type="tel" name="telefono" placeholder="WhatsApp" required
-        class="w-full pl-12 pr-5 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold focus:border-sky-500 focus:bg-white" />
+      <i class="fa-solid fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
+      <input type="tel" 
+             name="telefono" 
+             id="telefono"
+             placeholder="Ej: 3001234567" 
+             required
+             class="w-full pl-12 pr-5 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold focus:border-sky-500 focus:bg-white" />
     </div>
+  </div>
 
+  <div>
+    <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">
+      Hora Disponible
+    </label>
     <div class="relative group">
-      <i class="fa-solid fa-sparkles absolute left-5 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
-      <select name="tipo_una" required 
-        class="w-full pl-12 pr-10 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold appearance-none focus:border-sky-500 focus:bg-white cursor-pointer">
-        <option value="" disabled selected>Selecciona un servicio...</option>
-        {% for nombre, duracion in servicios.items() %}
-          <option value="{{ nombre }}" {% if nombre == form_data.tipo_una %}selected{% endif %}>
-            {{ nombre }}
+      <i class="fa-regular fa-clock absolute left-4 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
+      
+      <select name="hora" 
+              id="select-horas" 
+              required
+              class="w-full pl-12 pr-10 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold appearance-none focus:border-sky-500 focus:bg-white cursor-pointer hover:border-slate-300">
+        <option value="" disabled selected>Selecciona una hora...</option>
+        {% for h in horas_libres %}
+          <option value="{{ h.valor }}" 
+                  class="bg-white text-slate-900 font-semibold" 
+                  {% if h.valor == form_data.hora_previa %}selected{% endif %}>
+            {{ h.texto }}
           </option>
         {% endfor %}
       </select>
-      <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+      
+      <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-sky-500 transition-colors"></i>
     </div>
   </div>
+</div>
 </div>
 
           <div>
             <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">Notas o
               Requerimientos</label>
-            <textarea name="notes" rows="3" placeholder="¿Alguna observación especial para tu cita?"
+            <textarea name="notes" id="notas" rows="3" placeholder="¿Alguna observación especial para tu cita?"
               class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold resize-none"></textarea>
           </div>
 
-          <button type="submit"
-            class="w-full bg-slate-900 hover:bg-sky-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3">
-            <span>Confirmar Reserva</span>
-            <i class="fa-solid fa-arrow-right-long"></i>
-          </button>
+<button type="button" id="btn-confirmar" onclick="confirmarReservaFinal()"
+    class="w-full bg-slate-900 hover:bg-sky-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3">
+    <span id="btn-text">Confirmar Reserva</span>
+    <i id="btn-icon" class="fa-solid fa-arrow-right-long"></i>
+</button>
         </form>
       </div>
     </main>
   </div>
   <script src="{{ url_for('static', filename='js/form_intro.js') }}"></script>
+<div id="loader-agendapp" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 10000; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif;">
+    
+    <div style="position: relative; width: 80px; height: 80px;">
+        <div class="spinner-border"></div>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 30px; font-weight: 900; color: #0ea5e9;">A</div>
+    </div>
+
+    <div style="text-align: center; margin-top: 25px;">
+        <h2 style="color: #0f172a; margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 1px;">AGENDAPP</h2>
+        <p id="loader-msg" style="color: #64748b; font-size: 14px; margin-top: 5px;">Iniciando reserva...</p>
+    </div>
+
+    <div style="width: 180px; height: 4px; background: #f1f5f9; border-radius: 10px; margin-top: 20px; overflow: hidden;">
+        <div id="progress-bar" style="width: 0%; height: 100%; background: #0ea5e9; transition: width 0.4s ease;"></div>
+    </div>
+</div>
 </body>
 
 </html>
