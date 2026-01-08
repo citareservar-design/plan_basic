@@ -1,1 +1,13 @@
-[]
+[
+    {
+        "nombre": "diego peña",
+        "email": "instalaciones@yeminus.com",
+        "telefono": "5444444444",
+        "date": "2026-01-08",
+        "hora": "14:00",
+        "tipo_una": "servicio 4 horas",
+        "duracion": 240,
+        "notes": "kkkkk",
+        "timestamp": "1767848641125367"
+    }
+]
