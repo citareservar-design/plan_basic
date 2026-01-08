@@ -159,62 +159,26 @@ def citas():
 
 @appointment_bp.route('/api/horas-disponibles/<fecha>')
 def api_horas_disponibles(fecha):
-    # 1. Capturar el servicio y limpiar espacios
+    # 1. Importamos el servicio y las reservas
+    from services.appointment_service import obtener_horas_disponibles
+    from utils.reservations import cargar_reservas, cargar_config
+    
+    # 2. Capturar parámetros
     servicio_nombre = request.args.get('servicio', '').strip().lower()
     
+    # 3. Obtener duración del config
     config = cargar_config()
     servicios = config.get('servicios', {})
-    horarios_base = config.get('horarios_base', [])
-    hora_cierre_str = config.get('hora_cierre', '21:00')
-    
-    # 2. Obtener duración (Si no lo encuentra, asume 60)
     duracion_min = servicios.get(servicio_nombre, 60)
     
-    # Convertir cierre a objeto tiempo para comparar
-    formato = "%H:%M"
-    hora_cierre_dt = datetime.strptime(hora_cierre_str, formato)
-    
+    # 4. Cargar reservas actuales
     reservas = cargar_reservas()
-    ocupadas = [r['hora'] for r in reservas if r['date'] == fecha]
     
-    horas_validas = []
-
-    for hora_inicio in horarios_base:
-        # Convertir hora de inicio actual
-        inicio_dt = datetime.strptime(hora_inicio, formato)
-        # Calcular hora de fin
-        fin_dt = inicio_dt + timedelta(minutes=duracion_min)
-
-        # REGLA 1: ¿Se pasa de la hora de cierre?
-        if fin_dt > hora_cierre_dt:
-            continue # Salta esta hora, no sirve
-
-        # REGLA 2: ¿Choca con el almuerzo o citas existentes?
-        es_posible = True
-        pasos_de_una_hora = duracion_min // 60
-        
-        for i in range(pasos_de_una_hora):
-            bloque_dt = inicio_dt + timedelta(hours=i)
-            bloque_str = bloque_dt.strftime(formato)
-            
-            # Verificar si este bloque está ocupado o es hora de almuerzo
-            if bloque_str in ocupadas:
-                es_posible = False
-                break
-            
-            # Verificar almuerzo (12:00 a 13:00)
-            if config['almuerzo']['inicio'] <= bloque_str < config['almuerzo']['fin']:
-                es_posible = False
-                break
-
-        if es_posible:
-            horas_validas.append({
-                "valor": hora_inicio,
-                "texto": inicio_dt.strftime("%I:%M %p")
-            })
-
-    # DEBUG para que veas en la consola negra qué pasó
-    print(f"SERVICIO: {servicio_nombre} | DURACIÓN: {duracion_min}min | TOTAL HORAS: {len(horas_validas)}")
+    # 5. AQUÍ ESTÁ LA MAGIA: Llamamos a la función que SÍ tiene los filtros de Colombia
+    horas_validas = obtener_horas_disponibles(reservas, fecha, duracion_min)
+    
+    # DEBUG para confirmar que estamos usando la función correcta
+    print(f"ENVIANDO A WEB: {len(horas_validas)} horas encontradas para {fecha}")
     
     return jsonify(horas_validas)
 

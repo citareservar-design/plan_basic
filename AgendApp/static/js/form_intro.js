@@ -1,5 +1,5 @@
 
-console.log("form_intro.js cargado correctamente");
+console.log("form_intro.js cargadooooooo correctamente");
 
     // --- 1. ELEMENTOS DE LA INTRO ---
     const progressBar = document.getElementById('progress-bar');
@@ -54,84 +54,59 @@ console.log("form_intro.js cargado correctamente");
     }
 
     // --- 4. LÓGICA DE VALIDACIÓN Y HORAS INTELIGENTES ---
-   async function validarYEnviar() {
-    // Definimos los elementos para asegurar que JS los encuentre siempre
-    const inputFecha = document.getElementById('date');
+async function validarYEnviar() {
+    // 1. Identificamos los elementos (He ajustado los nombres según tu HTML)
+    const inputFecha = document.getElementById('date'); // O 'fecha'
     const selectServicio = document.getElementById('servicio');
     const selectHoras = document.getElementById('select-horas');
 
-    // Validamos que los elementos existan en el HTML
-    if (!inputFecha || !selectServicio || !selectHoras) {
-        console.error("No se encontraron los elementos del formulario");
-        return;
-    }
+    if (!inputFecha || !selectServicio || !selectHoras) return;
 
     const fechaVal = inputFecha.value;
     const servicioVal = selectServicio.value;
-    
-    // 1. Guardamos la hora que el usuario tenía marcada antes de que la lista cambie
-    const horaSeleccionadaAnteriormente = selectHoras.value; 
 
-    // Si no hay fecha, no hacemos nada todavía
-    if (!fechaVal) return;
+    // 2. LIMPIEZA INMEDIATA (Esto borra las horas AM apenas cambias algo)
+    selectHoras.innerHTML = '<option value="" disabled selected>Cargando disponibilidad...</option>';
 
-    // Si hay fecha pero no servicio, pedimos elegir servicio
-    if (!servicioVal) {
-        selectHoras.innerHTML = '<option value="" disabled selected>Selecciona un servicio primero</option>';
+    if (!fechaVal || !servicioVal) {
+        if (!servicioVal) {
+            selectHoras.innerHTML = '<option value="" disabled selected>Selecciona un servicio primero</option>';
+        }
         return;
     }
 
-    // Mostramos un mensaje temporal mientras carga
-    selectHoras.innerHTML = '<option value="" disabled selected>Cargando disponibilidad...</option>';
-
     try {
-        // 2. Llamada a la API enviando fecha y servicio (en minúsculas)
         const url = `/api/horas-disponibles/${fechaVal}?servicio=${encodeURIComponent(servicioVal.toLowerCase())}`;
         const response = await fetch(url);
         const horas = await response.json();
 
-        // 3. Limpiamos el selector para meter las nuevas opciones
+        // 3. SEGUNDA LIMPIEZA para quitar el "Cargando..."
         selectHoras.innerHTML = ''; 
 
         if (horas.length === 0) {
-            selectHoras.innerHTML = '<option value="" disabled selected>No hay tiempo para este servicio</option>';
-            alert("⚠️ No hay horarios disponibles para este servicio en la fecha seleccionada.");
+            selectHoras.innerHTML = '<option value="" disabled selected>No hay horarios disponibles</option>';
+            alert("No hay turnos disponibles para esta combinación.");
         } else {
-            // Creamos la opción por defecto
-            const defaultOpt = document.createElement('option');
-            defaultOpt.value = "";
-            defaultOpt.disabled = true;
-            defaultOpt.textContent = "Selecciona una hora...";
-            selectHoras.appendChild(defaultOpt);
+            // Opción por defecto
+            const placeholder = document.createElement('option');
+            placeholder.value = "";
+            placeholder.disabled = true;
+            placeholder.selected = true;
+            placeholder.textContent = "Selecciona una hora...";
+            selectHoras.appendChild(placeholder);
 
-            let horaSigueSiendoValida = false;
-
-            // 4. Llenamos el select con las horas que devolvió el Python
+            // 4. INSERTAMOS LAS HORAS FILTRADAS
             horas.forEach(h => {
                 const opt = document.createElement('option');
                 opt.value = h.valor;
                 opt.textContent = h.texto;
-                
-                // Si la hora de "hoy" coincide con la de "mañana", se mantiene seleccionada
-                if (h.valor === horaSeleccionadaAnteriormente) {
-                    opt.selected = true;
-                    horaSigueSiendoValida = true;
-                }
+                opt.className = "bg-white text-slate-900 font-semibold";
                 selectHoras.appendChild(opt);
             });
-
-            // 5. Si la hora vieja ya no existe (ej: era las 8am y hoy ya pasaron), reseteamos
-            if (!horaSigueSiendoValida) {
-                defaultOpt.selected = true;
-                // Solo alertamos si el usuario ya había hecho una elección previa que ahora es inválida
-                if (horaSeleccionadaAnteriormente !== "") {
-                    alert("❌ La hora elegida ya no está disponible (puede ser por el cierre o porque ya pasó).");
-                }
-            }
         }
     } catch (error) {
-        console.error("Error cargando disponibilidad:", error);
-        selectHoras.innerHTML = '<option value="" disabled selected>Error al cargar horas</option>';
+        console.error("Error:", error);
+        selectHoras.innerHTML = '<option value="" disabled selected>Error al cargar</option>';
     }
 }
 
@@ -215,3 +190,14 @@ async function confirmarReservaFinal() {
         }
     }
 }
+
+
+// Ejecutar la carga de horas si ya hay valores al cargar la página
+document.addEventListener('DOMContentLoaded', () => {
+    const inputFecha = document.getElementById('date');
+    const selectServicio = document.getElementById('servicio');
+    
+    if (inputFecha.value && selectServicio.value) {
+        validarYEnviar();
+    }
+});

@@ -176,30 +176,25 @@
     </div>
   </div>
 
-  <div>
-    <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">
-      Hora Disponible
-    </label>
-    <div class="relative group">
-      <i class="fa-regular fa-clock absolute left-4 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
+<div>
+  <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">
+    Hora Disponible
+  </label>
+  <div class="relative group">
+    <i class="fa-regular fa-clock absolute left-4 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
+    
+    <select name="hora" 
+            id="select-horas" 
+            required
+            class="w-full pl-12 pr-10 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold appearance-none focus:border-sky-500 focus:bg-white cursor-pointer hover:border-slate-300">
       
-      <select name="hora" 
-              id="select-horas" 
-              required
-              class="w-full pl-12 pr-10 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold appearance-none focus:border-sky-500 focus:bg-white cursor-pointer hover:border-slate-300">
-        <option value="" disabled selected>Selecciona una hora...</option>
-        {% for h in horas_libres %}
-          <option value="{{ h.valor }}" 
-                  class="bg-white text-slate-900 font-semibold" 
-                  {% if h.valor == form_data.hora_previa %}selected{% endif %}>
-            {{ h.texto }}
-          </option>
-        {% endfor %}
-      </select>
+      <option value="" disabled selected>Selecciona una hora...</option>
       
-      <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-sky-500 transition-colors"></i>
-    </div>
+    </select>
+    
+    <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-sky-500 transition-colors"></i>
   </div>
+</div>
 </div>
 </div>
 

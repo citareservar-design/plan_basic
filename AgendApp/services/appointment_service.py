@@ -14,75 +14,78 @@ from utils.reservations import (
 
 
 from datetime import datetime, timedelta
+import pytz
+
 
 def obtener_horas_disponibles(reservas, fecha_a_mostrar, duracion_servicio=60):
     from utils.reservations import get_horas_ocupadas_por_superposicion, cargar_config
     
     config = cargar_config()
-    horas_base = config.get("horarios_base", [])
+    horas_base = [h.strip() for h in config.get("horarios_base", [])]
     almuerzo = config.get('almuerzo', {"inicio": "12:00", "fin": "14:00"})
     hora_cierre_str = config.get('hora_cierre', '20:00')
     
-    horas_ocupadas = get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar)
-    ahora = datetime.now()
-    horas_libres = []
+    # 1. HORA ACTUAL COLOMBIA
+    tz = pytz.timezone('America/Bogota')
+    ahora_local = datetime.now(tz)
+    fecha_hoy = ahora_local.strftime("%Y-%m-%d")
+    hora_actual_obj = ahora_local.time()
 
-    # Convertimos hora de cierre a objeto time para comparar
-    dt_cierre = datetime.strptime(hora_cierre_str, "%H:%M").time()
+    # 2. RESERVAS EXISTENTES
+    horas_ocupadas = get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar)
+    
+    horas_libres = []
+    formato = "%H:%M"
+    hora_cierre_dt = datetime.strptime(hora_cierre_str, formato)
 
     for h in horas_base:
-        h = h.strip()
-        
-        # 1. Filtro Ocupado (Citas ya existentes)
-        if h in horas_ocupadas:
-            continue
-        
         try:
-            # Convertimos la hora actual del ciclo a objeto datetime para cálculos
-            hora_inicio_dt = datetime.strptime(h, "%H:%M")
-            # Sumamos la duración real del servicio (ej: 120 min)
-            hora_fin_dt = hora_inicio_dt + timedelta(minutes=int(duracion_servicio))
+            inicio_dt = datetime.strptime(h, formato)
+            # Calcular a qué hora terminaría este servicio
+            fin_dt = inicio_dt + timedelta(minutes=int(duracion_servicio))
             
-            # --- NUEVA LÓGICA DE COLISIÓN DE ALMUERZO ---
-            # Definimos los límites del almuerzo
-            almuerzo_inicio = datetime.strptime(almuerzo['inicio'], "%H:%M")
-            almuerzo_fin = datetime.strptime(almuerzo['fin'], "%H:%M")
-
-            # REGLA: Si la cita empieza antes de que termine el almuerzo 
-            # Y termina después de que el almuerzo empiece -> HAY CRUCE
-            if hora_inicio_dt < almuerzo_fin and hora_fin_dt > almuerzo_inicio:
-                continue
-
-            # --- FILTRO DE CIERRE ---
-            # Si termina después del cierre (ej: 18:01 cerrando a las 18:00) -> BLOQUEAR
-            if hora_fin_dt.time() > dt_cierre:
-                continue
-
-            # --- FILTRO DE HORAS PASADAS (Solo si es HOY) ---
-            fecha_hoy = ahora.strftime("%Y-%m-%d")
-            if fecha_a_mostrar == fecha_hoy:
-                # Si la hora de inicio es menor a la hora actual del servidor -> BLOQUEAR
-                if hora_inicio_dt.time() < ahora.time():
+            # --- FILTRO A: ¿La hora ya pasó? (Solo para hoy) ---
+            if str(fecha_a_mostrar) == str(fecha_hoy):
+                if inicio_dt.time() < hora_actual_obj:
                     continue
 
-# Creamos el texto en formato 12 horas para el cliente
-            # %I: hora (01-12), %M: minutos, %p: AM/PM
-            hora_12h = hora_inicio_dt.strftime("%I:%M %p")
+            # --- FILTRO B: ¿Se pasa de la hora de cierre? ---
+            # Si el servicio termina después de la hora de cierre, no sirve
+            if fin_dt > hora_cierre_dt:
+                continue
 
-            # Guardamos: 
-            # 'valor' -> "14:00" (Para que el servidor lo entienda)
-            # 'texto' -> "02:00 PM" (Para que el cliente lo vea bonito)
-            horas_libres.append({
-                'valor': h, 
-                'texto': hora_12h
-            })
+            # --- FILTRO C: ¿Se cruza con reservas o almuerzo? ---
+            es_posible = True
+            # Revisamos cada bloque de 60 min que ocupa el servicio
+            # Si el servicio dura 180 min (3h), revisamos 3 bloques
+            pasos = int(duracion_servicio) // 60
+            if pasos < 1: pasos = 1 # Mínimo un bloque
+
+            for i in range(pasos):
+                bloque_dt = inicio_dt + timedelta(hours=i)
+                bloque_str = bloque_dt.strftime(formato)
+                
+                # ¿Está ocupado por otra cita?
+                if bloque_str in horas_ocupadas:
+                    es_posible = False
+                    break
+                
+                # ¿Se cruza con el almuerzo?
+                if almuerzo['inicio'] <= bloque_str < almuerzo['fin']:
+                    es_posible = False
+                    break
             
+            if es_posible:
+                horas_libres.append({
+                    'valor': h, 
+                    'texto': inicio_dt.strftime("%I:%M %p")
+                })
+                
         except Exception as e:
-            print(f"Error procesando la hora {h}: {e}")
+            print(f"Error procesando hora {h}: {e}")
             continue
             
     return horas_libres
-
 def obtener_horas_libres_reagendar(fecha):
     return obtener_horas_disponibles(cargar_reservas(), fecha)
 
