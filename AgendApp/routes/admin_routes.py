@@ -14,13 +14,27 @@ def agenda():
     hoy = ahora.strftime("%Y-%m-%d")
     manana = (ahora + timedelta(days=1)).strftime("%Y-%m-%d")
     
-    # Filtramos las citas que sean de hoy O de mañana
+    # 1. Filtramos las citas que sean de hoy O de mañana
     citas_proximas = [r for r in reservas if r.get('date') in [hoy, manana]]
     
-    # Ordenamos primero por fecha y luego por hora
+    # 2. Ordenamos primero por fecha y luego por hora (formato 24h para ordenar bien)
     citas_proximas.sort(key=lambda x: (x['date'], x['hora']))
 
-    return render_template('admin_agenda.html', citas=citas_proximas, hoy=hoy, manana=manana)
+    # 3. --- CONVERSIÓN A 12 HORAS ---
+    for cita in citas_proximas:
+        try:
+            # Tomamos la hora original (ej: "14:30")
+            hora_obj = datetime.strptime(cita['hora'], "%H:%M")
+            # Creamos el nuevo campo formateado (ej: "02:30 PM")
+            cita['hora_formato_12'] = hora_obj.strftime("%I:%M %p")
+        except Exception:
+            # En caso de error, usamos la original como respaldo
+            cita['hora_formato_12'] = cita['hora']
+
+    return render_template('admin_agenda.html', 
+                           citas=citas_proximas, 
+                           hoy=hoy, 
+                           manana=manana)
 
 
 @admin_bp.route('/admin/config', methods=['GET', 'POST'])

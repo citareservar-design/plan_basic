@@ -3,7 +3,7 @@
     "empresa": "Cocoa nails",
     "email_admin": "minegocioo@gmail.com",
     "whatsapp": "573001234567",
-    "hora_cierre": "18:00",
+    "hora_cierre": "20:00",
     "almuerzo": {
         "inicio": "12:00",
         "fin": "13:00"
@@ -24,7 +24,10 @@
         "14:00",
         "15:00",
         "16:00",
-        "17:00"
+        "17:00",
+        "17:00",
+        "18:00",
+        "19:00"
     ],
     "servicios": {
         "servicio 4 horas": 240,

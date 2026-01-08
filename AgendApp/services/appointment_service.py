@@ -86,6 +86,9 @@ def obtener_horas_disponibles(reservas, fecha_a_mostrar, duracion_servicio=60):
             continue
             
     return horas_libres
+
+
+
 def obtener_horas_libres_reagendar(fecha):
     return obtener_horas_disponibles(cargar_reservas(), fecha)
 
