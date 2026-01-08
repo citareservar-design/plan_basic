@@ -83,9 +83,23 @@ async function validarYEnviar() {
         // 3. SEGUNDA LIMPIEZA para quitar el "Cargando..."
         selectHoras.innerHTML = ''; 
 
-        if (horas.length === 0) {
-            selectHoras.innerHTML = '<option value="" disabled selected>No hay horarios disponibles</option>';
-            alert("No hay turnos disponibles para esta combinación.");
+if (horas.length === 0) {
+            selectHoras.innerHTML = '<option value="" disabled selected>Sin disponibilidad</option>';
+            
+            // Mensaje estilo AgendApp (Azul y Blanco)
+            Swal.fire({
+                title: '<span style="color: #0f172a; font-weight: 900;">¡SIN TURNOS!</span>',
+                text: 'No hay horarios disponibles para este servicio en la fecha seleccionada.',
+                icon: 'info',
+                iconColor: '#0ea5e9', // El azul de tu logo
+                confirmButtonText: 'ENTENDIDO',
+                confirmButtonColor: '#0ea5e9',
+                background: '#ffffff',
+                customClass: {
+                    popup: 'rounded-3xl', // Bordes redondeados como tus tarjetas
+                    confirmButton: 'rounded-xl font-bold px-8 uppercase text-xs tracking-widest'
+                }
+            });
         } else {
             // Opción por defecto
             const placeholder = document.createElement('option');

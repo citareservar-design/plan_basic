@@ -8,6 +8,7 @@
   <title>AgendApp | Reserva Inteligente</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/form_intro.css') }}" />
@@ -161,20 +162,25 @@
   </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-  <div>
-    <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">
-      Número de WhatsApp
-    </label>
-    <div class="relative group">
-      <i class="fa-solid fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
-      <input type="tel" 
-             name="telefono" 
-             id="telefono"
-             placeholder="Ej: 3001234567" 
-             required
-             class="w-full pl-12 pr-5 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold focus:border-sky-500 focus:bg-white" />
-    </div>
+<div>
+  <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">
+    Número de WhatsApp
+  </label>
+  <div class="relative group">
+    <i class="fa-solid fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
+    <input type="tel" 
+           name="telefono" 
+           id="telefono"
+           placeholder="Ej: 3001234567" 
+           required
+           pattern="[0-9]{10,}"
+           minlength="10"
+           maxlength="10"
+           oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+           class="w-full pl-12 pr-5 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold focus:border-sky-500 focus:bg-white" />
   </div>
+  <p id="tel-error" class="text-[9px] text-red-500 font-bold mt-1 hidden">Deben ser exactamente 10 números</p>
+</div>
 
 <div>
   <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">
