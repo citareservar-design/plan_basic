@@ -184,18 +184,17 @@ def api_horas_disponibles(fecha):
 
 @appointment_bp.route('/api/reagendar/<timestamp>', methods=['POST'])
 def api_reagendar(timestamp):
-    data = request.get_json()
-    nueva_fecha = data.get('date')
-    nueva_hora = data.get('hora')
+    from services.appointment_service import reagendar_cita_por_id
     
-    # VALIDACIÓN: Bloqueo de domingos al reagendar
-    if es_domingo(nueva_fecha):
-        return jsonify({"status": "error", "message": "No se puede reagendar para un domingo."}), 400
+    # El timestamp ya lo tenemos del argumento de la función
+    datos = request.json
+    nueva_fecha = datos.get('nueva_fecha')
+    nueva_hora = datos.get('nueva_hora')
     
-    if not nueva_fecha or not nueva_hora:
-        return jsonify({"status": "error", "message": "Datos incompletos"}), 400
-        
+    # Llamamos a tu función de servicio
+    # (Asegúrate de que esta función acepte (id, fecha, hora))
     resultado = reagendar_cita_por_id(timestamp, nueva_fecha, nueva_hora)
+    
     return jsonify(resultado)
 
 @appointment_bp.route('/api/cancelar/<timestamp>', methods=['POST'])

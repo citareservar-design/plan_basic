@@ -5,6 +5,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 
+
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JSON_PATH = os.path.join(BASE_DIR, 'data', 'reservas.json')
 CONFIG_PATH = os.path.join(BASE_DIR, 'data', 'config.json')
@@ -134,10 +136,7 @@ def get_horas_ocupadas_por_superposicion(reservas, fecha_a_mostrar):
 
 # --- CORREOS ---
 
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from datetime import datetime
+
 
 def enviar_correo_confirmacion(reserva, calendar_link, citas_link):
     config = cargar_config()
