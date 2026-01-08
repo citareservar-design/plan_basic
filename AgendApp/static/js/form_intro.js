@@ -55,8 +55,8 @@ console.log("form_intro.js cargadooooooo correctamente");
 
     // --- 4. LÓGICA DE VALIDACIÓN Y HORAS INTELIGENTES ---
 async function validarYEnviar() {
-    // 1. Identificamos los elementos (He ajustado los nombres según tu HTML)
-    const inputFecha = document.getElementById('date'); // O 'fecha'
+    // 1. Identificamos los elementos
+    const inputFecha = document.getElementById('date'); 
     const selectServicio = document.getElementById('servicio');
     const selectHoras = document.getElementById('select-horas');
 
@@ -64,6 +64,30 @@ async function validarYEnviar() {
 
     const fechaVal = inputFecha.value;
     const servicioVal = selectServicio.value;
+
+    // --- BLOQUEO DE DOMINGOS ---
+    if (fechaVal) {
+        // Usamos la fecha con T00:00:00 para evitar desfases de zona horaria
+        const fechaObj = new Date(fechaVal + 'T00:00:00');
+        if (fechaObj.getDay() === 0) { // 0 es Domingo
+            Swal.fire({
+                title: '<span style="color: #0f172a; font-weight: 900;">DÍA NO LABORAL</span>',
+                text: 'Lo sentimos, los domingos no estamos disponibles para citas.',
+                icon: 'warning',
+                iconColor: '#0ea5e9',
+                confirmButtonText: 'ENTENDIDO',
+                confirmButtonColor: '#0ea5e9',
+                background: '#ffffff',
+                customClass: {
+                    popup: 'rounded-3xl',
+                    confirmButton: 'rounded-xl font-bold px-8 uppercase text-xs tracking-widest'
+                }
+            });
+            inputFecha.value = ""; // Limpiar fecha
+            selectHoras.innerHTML = '<option value="" disabled selected>Selecciona una fecha válida...</option>';
+            return; // Detener ejecución
+        }
+    }
 
     // 2. LIMPIEZA INMEDIATA (Esto borra las horas AM apenas cambias algo)
     selectHoras.innerHTML = '<option value="" disabled selected>Cargando disponibilidad...</option>';
@@ -83,7 +107,7 @@ async function validarYEnviar() {
         // 3. SEGUNDA LIMPIEZA para quitar el "Cargando..."
         selectHoras.innerHTML = ''; 
 
-if (horas.length === 0) {
+        if (horas.length === 0) {
             selectHoras.innerHTML = '<option value="" disabled selected>Sin disponibilidad</option>';
             
             // Mensaje estilo AgendApp (Azul y Blanco)
@@ -91,12 +115,12 @@ if (horas.length === 0) {
                 title: '<span style="color: #0f172a; font-weight: 900;">¡SIN TURNOS!</span>',
                 text: 'No hay horarios disponibles para este servicio en la fecha seleccionada.',
                 icon: 'info',
-                iconColor: '#0ea5e9', // El azul de tu logo
+                iconColor: '#0ea5e9',
                 confirmButtonText: 'ENTENDIDO',
                 confirmButtonColor: '#0ea5e9',
                 background: '#ffffff',
                 customClass: {
-                    popup: 'rounded-3xl', // Bordes redondeados como tus tarjetas
+                    popup: 'rounded-3xl',
                     confirmButton: 'rounded-xl font-bold px-8 uppercase text-xs tracking-widest'
                 }
             });
@@ -123,7 +147,6 @@ if (horas.length === 0) {
         selectHoras.innerHTML = '<option value="" disabled selected>Error al cargar</option>';
     }
 }
-
 
 async function confirmarReservaFinal() {
     const loader = document.getElementById('loader-agendapp');

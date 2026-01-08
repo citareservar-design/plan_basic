@@ -96,32 +96,6 @@ def form():
         form_data=form_data,
         servicios=servicios_config  # <--- IMPORTANTE: Enviamos los servicios al HTML
     )
-    fecha_a_mostrar = request.args.get('date', hoy)
-    
-    # VALIDACIÓN: Si el usuario selecciona domingo en el selector de fecha
-    if es_domingo(fecha_a_mostrar):
-        flash("📅 Has seleccionado un domingo. Por favor, elige otro día de la semana.", "warning")
-        horas_libres = [] # No mostramos horas si es domingo
-    else:
-        reservas = cargar_reservas()
-        horas_libres = obtener_horas_disponibles(reservas, fecha_a_mostrar)
-
-    form_data = {
-        'nombre': request.args.get('nombre', ''),
-        'email': request.args.get('email', ''),
-        'notas': request.args.get('notes', ''),
-        'tipo_una': request.args.get('tipo_una', ''),
-        'telefono': request.args.get('telefono', ''),
-        'hora_previa': request.args.get('hora', '')
-    }
-
-    return render_template(
-        'form.html',
-        hoy=hoy,
-        horas_libres=horas_libres,
-        fecha_seleccionada=fecha_a_mostrar,
-        form_data=form_data
-    )
 
 @appointment_bp.route('/citas', methods=['GET', 'POST'])
 def citas():
@@ -159,6 +133,9 @@ def citas():
 
 @appointment_bp.route('/api/horas-disponibles/<fecha>')
 def api_horas_disponibles(fecha):
+    
+    if es_domingo(fecha):
+        return jsonify([])
     # 1. Importamos el servicio y las reservas
     from services.appointment_service import obtener_horas_disponibles
     from utils.reservations import cargar_reservas, cargar_config
@@ -190,6 +167,12 @@ def api_reagendar(timestamp):
     datos = request.json
     nueva_fecha = datos.get('nueva_fecha')
     nueva_hora = datos.get('nueva_hora')
+    
+    if es_domingo(nueva_fecha):
+        return jsonify({
+            "status": "error", 
+            "message": "Lo sentimos, AgendApp no opera los domingos."
+        }), 400
     
     # Llamamos a tu función de servicio
     # (Asegúrate de que esta función acepte (id, fecha, hora))

@@ -106,17 +106,17 @@
     <label class="text-slate-500 text-[11px] font-black uppercase mb-2 block tracking-widest">
       Fecha de Cita
     </label>
-    <div class="relative group">
-      <i class="fa-regular fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
-      <input type="date" 
-             name="date" 
-             id="date" 
-             required 
-             min="{{ hoy }}" 
-             value="{{ fecha_seleccionada }}"
-             onchange="validarYEnviar()"
-             class="w-full pl-12 pr-4 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold focus:border-sky-500 focus:bg-white" />
-    </div>
+<div class="relative group">
+  <i class="fa-regular fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-sky-500 z-10"></i>
+  <input type="date" 
+         name="date" 
+         id="date" 
+         required 
+         min="{{ hoy }}" 
+         value="{{ fecha_seleccionada }}"
+         onchange="validarYEnviar()"
+         class="w-full pl-12 pr-4 py-4 bg-white/50 border-2 border-slate-100 rounded-2xl outline-none transition-all text-slate-900 font-bold focus:border-sky-500 focus:bg-white" />
+</div>
   </div>
 
   <div>
